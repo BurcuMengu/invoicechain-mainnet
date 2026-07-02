@@ -217,3 +217,74 @@ fn buy_invoice_rejects_unknown_id() {
     let res = market.try_buy_invoice(&999u64, &investor);
     assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotFound as u32))));
 }
+
+#[test]
+fn settle_pays_owner_face_value_and_bumps_reputation() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    token.faucet(&debtor);
+    token.approve(&debtor, &market.address, &1_000_000_000i128, &10000);
+    market.settle(&id, &debtor);
+
+    let inv = market.get_invoice(&id);
+    assert_eq!(inv.status, Status::Settled);
+    // investor received full face value (100 USDC) on top of prior balance (1000 - 90 = 910 USDC)
+    assert_eq!(token.balance(&investor), 9_100_000_000i128 + 1_000_000_000i128);
+}
+
+#[test]
+fn settle_rejects_non_funded() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    // Invoice is Listed (not Funded) — settle must reject
+    let res = market.try_settle(&id, &debtor);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotFunded as u32))));
+}
+
+#[test]
+fn settle_records_reputation() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    token.faucet(&debtor);
+    token.approve(&debtor, &market.address, &1_000_000_000i128, &10000);
+    market.settle(&id, &debtor);
+
+    // Verify cross-contract call actually updated reputation
+    let rep = reputation::ReputationClient::new(&s.env, &s.rep_id);
+    let score = rep.get_score(&seller);
+    assert_eq!(score.settled_count, 1);
+    assert_eq!(score.volume, 1_000_000_000i128);
+}

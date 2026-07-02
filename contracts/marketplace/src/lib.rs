@@ -110,7 +110,33 @@ impl Marketplace {
         env.events().publish((symbol_short!("funded"), investor), (id, price));
     }
 
-    // settle/default/cancel/views added in later tasks.
+    pub fn settle(env: Env, id: u64, payer: Address) {
+        payer.require_auth();
+        let mut inv = read_invoice(&env, id);
+        if inv.status != Status::Funded {
+            panic_with_error!(&env, MarketError::NotFunded);
+        }
+        // CEI: capture values, write state BEFORE external interactions
+        let seller = inv.seller.clone();
+        let owner = inv.owner.clone();
+        let face_value = inv.face_value;
+        inv.status = Status::Settled;
+        write_invoice(&env, &inv);
+        env.storage().instance().extend_ttl(INVOICE_LIFETIME_THRESHOLD, INVOICE_BUMP_AMOUNT);
+
+        // Interactions: token transfer then cross-contract reputation call
+        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token = TokenClient::new(&env, &token_addr);
+        token.transfer_from(&env.current_contract_address(), &payer, &owner, &face_value);
+
+        let rep_addr: Address = env.storage().instance().get(&DataKey::Reputation).unwrap();
+        let rep = reputation::ReputationClient::new(&env, &rep_addr);
+        rep.record_settled(&seller, &face_value);
+
+        env.events().publish((symbol_short!("settled"), seller), (id, face_value));
+    }
+
+    // default/cancel/views added in later tasks.
 
     #[doc(hidden)]
     pub fn _sale_price(_env: Env, face_value: i128, discount_bps: u32) -> i128 {
