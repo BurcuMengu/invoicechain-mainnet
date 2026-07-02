@@ -160,3 +160,60 @@ fn create_invoice_rejects_due_in_past() {
     );
     assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::DueInPast as u32))));
 }
+
+#[test]
+fn buy_invoice_transfers_discounted_price_to_seller() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32, // 100 USDC, 10% discount → price 90 USDC
+    );
+
+    token.faucet(&investor); // 1000 USDC = 10_000_000_000
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    let inv = market.get_invoice(&id);
+    assert_eq!(inv.status, Status::Funded);
+    assert_eq!(inv.owner, investor);
+    assert_eq!(token.balance(&seller), 900_000_000i128);    // 90 USDC
+    assert_eq!(token.balance(&investor), 9_100_000_000i128); // 1000 - 90
+}
+
+#[test]
+fn buy_invoice_rejects_non_listed() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+
+    // First buy succeeds
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &2_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    // Second buy must fail with NotListed (invoice is now Funded)
+    let res = market.try_buy_invoice(&id, &investor);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotListed as u32))));
+}
+
+#[test]
+fn buy_invoice_rejects_unknown_id() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let investor = Address::generate(&s.env);
+
+    let res = market.try_buy_invoice(&999u64, &investor);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotFound as u32))));
+}

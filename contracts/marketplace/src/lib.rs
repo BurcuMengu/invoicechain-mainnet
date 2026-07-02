@@ -4,7 +4,7 @@ mod types;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, Address, Env, String};
+use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, token::TokenClient, Address, Env, String};
 use types::{sale_price, DataKey, Invoice, MarketError, Status};
 
 const DAY_IN_LEDGERS: u32 = 17_280;
@@ -93,7 +93,24 @@ impl Marketplace {
         read_invoice(&env, id)
     }
 
-    // buy/settle/default/cancel/views added in later tasks.
+    pub fn buy_invoice(env: Env, id: u64, investor: Address) {
+        investor.require_auth();
+        let mut inv = read_invoice(&env, id);
+        if inv.status != Status::Listed {
+            panic_with_error!(&env, MarketError::NotListed);
+        }
+        let price = sale_price(inv.face_value, inv.discount_bps);
+        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token = TokenClient::new(&env, &token_addr);
+        token.transfer_from(&env.current_contract_address(), &investor, &inv.seller, &price);
+        inv.owner = investor.clone();
+        inv.status = Status::Funded;
+        write_invoice(&env, &inv);
+        env.storage().instance().extend_ttl(INVOICE_LIFETIME_THRESHOLD, INVOICE_BUMP_AMOUNT);
+        env.events().publish((symbol_short!("funded"), investor), (id, price));
+    }
+
+    // settle/default/cancel/views added in later tasks.
 
     #[doc(hidden)]
     pub fn _sale_price(_env: Env, face_value: i128, discount_bps: u32) -> i128 {
