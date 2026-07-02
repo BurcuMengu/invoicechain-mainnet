@@ -33,23 +33,43 @@ export default function CreatePage() {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [pending, setPending] = useState(false)
 
+  // Plain decimal number, e.g. "1000" or "12.34". Rejects "1e3", "1,000",
+  // hex, leading "+/-", and other forms that pass parseFloat but break toStroops.
+  const DECIMAL_RE = /^\d+(\.\d+)?$/
+  const INTEGER_RE = /^\d+$/
+
   const validate = (): boolean => {
     const errs: FieldErrors = {}
     if (!debtorName.trim()) {
       errs.debtorName = 'Debtor name is required.'
     }
-    const fv = parseFloat(faceValue)
-    if (!faceValue || isNaN(fv) || fv <= 0) {
-      errs.faceValue = 'Face value must be greater than 0.'
+
+    const fvStr = faceValue.trim()
+    if (!DECIMAL_RE.test(fvStr) || parseFloat(fvStr) <= 0) {
+      errs.faceValue = 'Face value must be a plain number greater than 0 (e.g. 1000 or 1000.50).'
+    } else {
+      // Guard against >7 decimal places, which toStroops would silently truncate.
+      const [, frac = ''] = fvStr.split('.')
+      if (frac.length > 7) {
+        errs.faceValue = 'Face value supports at most 7 decimal places.'
+      }
     }
-    const pct = parseFloat(discountPct)
-    if (!discountPct || isNaN(pct) || pct < 0.01 || pct > 90) {
-      errs.discountPct = 'Discount must be between 0.01% and 90%.'
+
+    const pctStr = discountPct.trim()
+    if (!DECIMAL_RE.test(pctStr)) {
+      errs.discountPct = 'Discount must be a plain number between 0.01% and 90%.'
+    } else {
+      const pct = parseFloat(pctStr)
+      if (pct < 0.01 || pct > 90) {
+        errs.discountPct = 'Discount must be between 0.01% and 90%.'
+      }
     }
-    const days = parseInt(dueInDays, 10)
-    if (!dueInDays || isNaN(days) || days < 1) {
-      errs.dueInDays = 'Due-in must be at least 1 day.'
+
+    const daysStr = dueInDays.trim()
+    if (!INTEGER_RE.test(daysStr) || parseInt(daysStr, 10) < 1) {
+      errs.dueInDays = 'Due-in must be a whole number of at least 1 day.'
     }
+
     setErrors(errs)
     return Object.keys(errs).length === 0
   }

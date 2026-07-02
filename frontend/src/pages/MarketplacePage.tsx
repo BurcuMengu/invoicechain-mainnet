@@ -99,7 +99,21 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {!loading && invoices.length === 0 && (
+      {!loading && error && (
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <p className="text-red-600 dark:text-red-400 text-lg">
+            Could not load the marketplace.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="inline-block px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && invoices.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
           <p className="text-gray-500 dark:text-gray-400 text-lg">
             No open invoices — create one!
@@ -113,7 +127,7 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {!loading && invoices.length > 0 && (
+      {!loading && !error && invoices.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {invoices.map((inv) => (
             <InvoiceCard key={String(inv.id)} invoice={inv}>

@@ -11,6 +11,8 @@ import { useInvoicesBySeller, useInvoicesByOwner } from '../hooks/useInvoices'
 import InvoiceCard from '../components/InvoiceCard'
 import type { Score } from '../contracts/reputation/src'
 
+const GRACE_PERIOD_LEDGERS = 17_280n
+
 async function getCurrentLedger(): Promise<number> {
   const server = new Server(config.rpcUrl)
   const info = await server.getLatestLedger()
@@ -51,6 +53,7 @@ export default function PortfolioPage() {
   const [scoreError, setScoreError] = useState<string | null>(null)
   const [currentLedger, setCurrentLedger] = useState<number | null>(null)
   const [pendingId, setPendingId] = useState<bigint | null>(null)
+  const [scoreTick, setScoreTick] = useState(0)
 
   // Fetch current ledger sequence for past-due detection
   useEffect(() => {
@@ -83,11 +86,12 @@ export default function PortfolioPage() {
     }
     run()
     return () => { cancelled = true }
-  }, [address])
+  }, [address, scoreTick])
 
   const refetchAll = useCallback(() => {
     refetchSeller()
     refetchOwner()
+    setScoreTick((t) => t + 1)
   }, [refetchSeller, refetchOwner])
 
   const handleCancel = async (id: bigint) => {
@@ -220,10 +224,20 @@ export default function PortfolioPage() {
         {sellerLoading && (
           <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
         )}
-        {sellerError && (
-          <p className="text-sm text-red-600 dark:text-red-400">{sellerError}</p>
+        {!sellerLoading && sellerError && (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Could not load your invoices. {sellerError}
+            </p>
+            <button
+              onClick={() => refetchSeller()}
+              className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Retry
+            </button>
+          </div>
         )}
-        {!sellerLoading && sellerInvoices.length === 0 && (
+        {!sellerLoading && !sellerError && sellerInvoices.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">No invoices created yet.</p>
         )}
         {!sellerLoading && sellerInvoices.length > 0 && (
@@ -251,17 +265,28 @@ export default function PortfolioPage() {
         {ownerLoading && (
           <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
         )}
-        {ownerError && (
-          <p className="text-sm text-red-600 dark:text-red-400">{ownerError}</p>
+        {!ownerLoading && ownerError && (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Could not load your investments. {ownerError}
+            </p>
+            <button
+              onClick={() => refetchOwner()}
+              className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Retry
+            </button>
+          </div>
         )}
-        {!ownerLoading && ownerInvoices.length === 0 && (
+        {!ownerLoading && !ownerError && ownerInvoices.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">No investments yet.</p>
         )}
         {!ownerLoading && ownerInvoices.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ownerInvoices.map((inv) => {
               const isPastDue =
-                currentLedger !== null && BigInt(currentLedger) >= inv.due_ledger
+                currentLedger !== null &&
+                BigInt(currentLedger) >= inv.due_ledger + GRACE_PERIOD_LEDGERS
               return (
                 <InvoiceCard key={String(inv.id)} invoice={inv}>
                   {inv.status.tag === 'Funded' && (

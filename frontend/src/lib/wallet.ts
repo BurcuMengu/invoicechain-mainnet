@@ -11,14 +11,14 @@ export const kit = new StellarWalletsKit({
   modules: allowAllModules(),
 })
 
-export async function pickAndConnect(): Promise<string> {
+export async function pickAndConnect(): Promise<{ address: string; walletId: string }> {
   return new Promise((resolve, reject) => {
     kit.openModal({
       onWalletSelected: async (option) => {
         try {
           kit.setWallet(option.id)
           const { address } = await kit.getAddress()
-          resolve(address)
+          resolve({ address, walletId: option.id })
         } catch (e) {
           reject(e)
         }
