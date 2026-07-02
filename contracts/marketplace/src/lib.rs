@@ -4,8 +4,17 @@ mod types;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, token::TokenClient, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, symbol_short, token::TokenClient, Address, Env, String, Vec};
 use types::{sale_price, DataKey, Invoice, MarketError, Status};
+
+/// Generated cross-contract client for the Reputation contract.
+/// Using #[contractclient] instead of linking the reputation crate directly
+/// avoids duplicate wasm symbol collisions at link time.
+#[contractclient(name = "ReputationClient")]
+pub trait ReputationInterface {
+    fn record_settled(env: Env, party: Address, amount: i128);
+    fn record_defaulted(env: Env, party: Address);
+}
 
 const DAY_IN_LEDGERS: u32 = 17_280;
 const INVOICE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
@@ -130,7 +139,7 @@ impl Marketplace {
         token.transfer_from(&env.current_contract_address(), &payer, &owner, &face_value);
 
         let rep_addr: Address = env.storage().instance().get(&DataKey::Reputation).unwrap();
-        let rep = reputation::ReputationClient::new(&env, &rep_addr);
+        let rep = ReputationClient::new(&env, &rep_addr);
         rep.record_settled(&seller, &face_value);
 
         env.events().publish((symbol_short!("settled"), seller), (id, face_value));
@@ -160,7 +169,7 @@ impl Marketplace {
         write_invoice(&env, &inv);
         env.storage().instance().extend_ttl(INVOICE_LIFETIME_THRESHOLD, INVOICE_BUMP_AMOUNT);
         let rep_addr: Address = env.storage().instance().get(&DataKey::Reputation).unwrap();
-        let rep = reputation::ReputationClient::new(&env, &rep_addr);
+        let rep = ReputationClient::new(&env, &rep_addr);
         rep.record_defaulted(&inv.seller);
         env.events().publish((symbol_short!("defaulted"), inv.seller.clone()), id);
     }
