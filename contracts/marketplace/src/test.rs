@@ -1,6 +1,6 @@
 #![cfg(test)]
-use crate::{types::Status, Marketplace, MarketplaceClient};
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, Env, String};
+use crate::{types::{MarketError, Status}, Marketplace, MarketplaceClient};
+use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, Env, Error, String};
 
 /// Setup stores owned values only — no borrowing client.
 /// MarketplaceClient<'a> borrows Env so it cannot be stored alongside it
@@ -54,8 +54,109 @@ fn create_invoice_stores_listed() {
         &1000u32,           // 10% discount
     );
     let inv = market.get_invoice(&id);
+    assert_eq!(inv.id, 0u64);
     assert_eq!(inv.status, Status::Listed);
     assert_eq!(inv.seller, seller);
+    assert_eq!(inv.debtor_name, String::from_str(&s.env, "ACME Corp"));
     assert_eq!(inv.face_value, 1_000_000_000i128);
+    assert_eq!(inv.due_ledger, 500u64);
+    assert_eq!(inv.discount_bps, 1000u32);
     assert_eq!(inv.owner, seller);
+}
+
+#[test]
+fn create_invoice_rejects_zero_face_value() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &0i128,
+        &500u64,
+        &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::ZeroAmount as u32))));
+}
+
+#[test]
+fn create_invoice_rejects_invalid_discount() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+
+    // discount_bps = 0 → InvalidDiscount
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &1_000_000i128,
+        &500u64,
+        &0u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::InvalidDiscount as u32))));
+
+    // discount_bps = 9001 → InvalidDiscount
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &1_000_000i128,
+        &500u64,
+        &9001u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::InvalidDiscount as u32))));
+}
+
+#[test]
+fn create_invoice_accepts_boundary_discounts() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+
+    // discount_bps = 1 (minimum) → ok
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &1_000_000i128,
+        &500u64,
+        &1u32,
+    );
+    assert!(res.is_ok());
+
+    // discount_bps = 9000 (maximum) → ok
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &1_000_000i128,
+        &500u64,
+        &9000u32,
+    );
+    assert!(res.is_ok());
+}
+
+#[test]
+fn create_invoice_rejects_due_in_past() {
+    let s = setup();
+    // Sequence number is 100; due_ledger <= 100 must be rejected.
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+
+    // due_ledger == current sequence (100) → DueInPast
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &1_000_000i128,
+        &100u64,
+        &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::DueInPast as u32))));
+
+    // due_ledger < current sequence (50) → DueInPast
+    let res = market.try_create_invoice(
+        &seller,
+        &String::from_str(&s.env, "ACME"),
+        &1_000_000i128,
+        &50u64,
+        &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::DueInPast as u32))));
 }

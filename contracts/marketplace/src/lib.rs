@@ -44,6 +44,7 @@ impl Marketplace {
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Reputation, &reputation);
         env.storage().instance().set(&DataKey::NextId, &0u64);
+        env.storage().instance().extend_ttl(INVOICE_LIFETIME_THRESHOLD, INVOICE_BUMP_AMOUNT);
     }
 
     pub fn set_reputation(env: Env, reputation: Address) {
