@@ -16,6 +16,8 @@ Freighter wallet connection and a testnet faucet for demo USDC.
 Connect a Freighter wallet, claim test USDC from the in-app faucet, then create,
 buy, and settle invoices. (No real funds — testnet only.)
 
+![InvoiceChain demo](docs/demo.gif)
+
 ## Screenshots
 
 ### Desktop
