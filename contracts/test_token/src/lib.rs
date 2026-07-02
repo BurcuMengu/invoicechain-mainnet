@@ -46,12 +46,15 @@ fn read_balance(env: &Env, addr: &Address) -> i128 {
 fn write_balance(env: &Env, addr: &Address, amount: i128) {
     env.storage().persistent().set(&DataKey::Balance(addr.clone()), &amount);
 }
-fn read_allowance(env: &Env, from: &Address, spender: &Address) -> i128 {
+fn read_allowance_value(env: &Env, from: &Address, spender: &Address) -> Option<AllowanceValue> {
     let key = DataKey::Allowance(AllowanceKey { from: from.clone(), spender: spender.clone() });
     match env.storage().temporary().get::<_, AllowanceValue>(&key) {
-        Some(v) if v.expiration_ledger >= env.ledger().sequence() => v.amount,
-        _ => 0,
+        Some(v) if v.expiration_ledger >= env.ledger().sequence() => Some(v),
+        _ => None,
     }
+}
+fn read_allowance(env: &Env, from: &Address, spender: &Address) -> i128 {
+    read_allowance_value(env, from, spender).map(|v| v.amount).unwrap_or(0)
 }
 fn write_allowance(env: &Env, from: &Address, spender: &Address, amount: i128, exp: u32) {
     let key = DataKey::Allowance(AllowanceKey { from: from.clone(), spender: spender.clone() });
@@ -92,11 +95,13 @@ impl TestToken {
 
     pub fn transfer_from(env: Env, spender: Address, from: Address, to: Address, amount: i128) {
         spender.require_auth();
-        let allow = read_allowance(&env, &from, &spender);
-        assert!(allow >= amount, "insufficient allowance");
+        let allow_val = read_allowance_value(&env, &from, &spender);
+        assert!(allow_val.is_some(), "no valid allowance");
+        let allow_val = allow_val.unwrap();
+        assert!(allow_val.amount >= amount, "insufficient allowance");
         let fb = read_balance(&env, &from);
         assert!(fb >= amount, "insufficient balance");
-        write_allowance(&env, &from, &spender, allow - amount, env.ledger().sequence() + 1);
+        write_allowance(&env, &from, &spender, allow_val.amount - amount, allow_val.expiration_ledger);
         write_balance(&env, &from, fb - amount);
         write_balance(&env, &to, read_balance(&env, &to) + amount);
         env.events().publish((symbol_short!("transfer"), from, to), amount);
