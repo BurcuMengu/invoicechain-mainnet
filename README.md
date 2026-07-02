@@ -152,6 +152,29 @@ The on/off-ramp page is a **mock ramp**: deposits mint test USDC via the faucet
 and withdrawals are **simulated** — this is testnet only, so no real fiat ever
 moves.
 
+## Monitoring & analytics
+
+The frontend ships with production monitoring and product analytics (both
+env-gated — they only initialize when their keys are present in the build):
+
+- **PostHog (EU)** — product analytics + **session replay** + autocapture +
+  web vitals. Custom events tracked: `wallet_connected`, `faucet_claimed`,
+  `invoice_created`, `invoice_bought`, `invoice_settled`, `invoice_defaulted`,
+  `invoice_cancelled`, `feedback_submitted`. Each wallet is `identify()`-ed by
+  its public address, so unique wallet interactions are countable.
+- **Sentry (EU)** — error / exception monitoring; failed contract calls are
+  reported via `captureError`.
+- **In-app feedback widget** (bottom-left) — submissions are sent to PostHog as
+  `feedback_submitted` and also stored in `localStorage` as a no-backend
+  fallback.
+- **Privacy** — a first-visit notice discloses analytics + session replay and
+  offers an opt-out that disables PostHog capture for that browser. See
+  [PRIVACY.md](PRIVACY.md).
+
+Keys are supplied at build time via `VITE_SENTRY_DSN`, `VITE_POSTHOG_KEY`,
+`VITE_POSTHOG_HOST` (GitHub Actions secrets/vars for the deployed build; see
+`frontend/.env.example` for local dev).
+
 ## Repo layout
 
 ```
