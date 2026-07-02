@@ -37,6 +37,10 @@ struct Meta {
 
 const FAUCET_AMOUNT: i128 = 10_000_000_000; // 1000 * 10^7
 
+const DAY_IN_LEDGERS: u32 = 17_280;
+const BALANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+const BALANCE_LIFETIME_THRESHOLD: u32 = BALANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
+
 #[contract]
 pub struct TestToken;
 
@@ -45,6 +49,11 @@ fn read_balance(env: &Env, addr: &Address) -> i128 {
 }
 fn write_balance(env: &Env, addr: &Address, amount: i128) {
     env.storage().persistent().set(&DataKey::Balance(addr.clone()), &amount);
+    env.storage().persistent().extend_ttl(
+        &DataKey::Balance(addr.clone()),
+        BALANCE_LIFETIME_THRESHOLD,
+        BALANCE_BUMP_AMOUNT,
+    );
 }
 fn read_allowance_value(env: &Env, from: &Address, spender: &Address) -> Option<AllowanceValue> {
     let key = DataKey::Allowance(AllowanceKey { from: from.clone(), spender: spender.clone() });
@@ -66,11 +75,13 @@ impl TestToken {
     pub fn __constructor(env: Env, admin: Address, decimal: u32, name: String, symbol: String) {
         env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage().instance().set(&DataKey::Meta, &Meta { decimal, name, symbol });
+        env.storage().instance().extend_ttl(BALANCE_LIFETIME_THRESHOLD, BALANCE_BUMP_AMOUNT);
     }
 
     pub fn faucet(env: Env, to: Address) {
         let bal = read_balance(&env, &to);
         write_balance(&env, &to, bal + FAUCET_AMOUNT);
+        env.storage().instance().extend_ttl(BALANCE_LIFETIME_THRESHOLD, BALANCE_BUMP_AMOUNT);
         env.events().publish((symbol_short!("faucet"), to.clone()), FAUCET_AMOUNT);
     }
 

@@ -108,14 +108,20 @@ impl Marketplace {
         if inv.status != Status::Listed {
             panic_with_error!(&env, MarketError::NotListed);
         }
+        // Fix 1: reject invoices that are already past due
+        if inv.due_ledger <= env.ledger().sequence() as u64 {
+            panic_with_error!(&env, MarketError::DueInPast);
+        }
+        // Fix 2: CEI — compute price, write state BEFORE external token call
         let price = sale_price(inv.face_value, inv.discount_bps);
-        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
-        let token = TokenClient::new(&env, &token_addr);
-        token.transfer_from(&env.current_contract_address(), &investor, &inv.seller, &price);
         inv.owner = investor.clone();
         inv.status = Status::Funded;
         write_invoice(&env, &inv);
         env.storage().instance().extend_ttl(INVOICE_LIFETIME_THRESHOLD, INVOICE_BUMP_AMOUNT);
+        // Interaction: transfer discounted price from investor to seller
+        let token_addr: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token = TokenClient::new(&env, &token_addr);
+        token.transfer_from(&env.current_contract_address(), &investor, &inv.seller, &price);
         env.events().publish((symbol_short!("funded"), investor), (id, price));
     }
 

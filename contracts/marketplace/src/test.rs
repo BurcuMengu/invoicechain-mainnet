@@ -186,6 +186,30 @@ fn buy_invoice_transfers_discounted_price_to_seller() {
 }
 
 #[test]
+fn buy_invoice_rejects_past_due() {
+    let s = setup(); // sequence = 100
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    // Create invoice with due_ledger = 500 (valid at sequence 100)
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+
+    // Advance ledger past due date
+    s.env.ledger().set_sequence_number(600);
+
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+
+    let res = market.try_buy_invoice(&id, &investor);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::DueInPast as u32))));
+}
+
+#[test]
 fn buy_invoice_rejects_non_listed() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
