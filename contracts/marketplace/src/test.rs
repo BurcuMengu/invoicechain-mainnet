@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::{types::{MarketError, Status}, Marketplace, MarketplaceClient};
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, Env, Error, String};
+use soroban_sdk::{testutils::{Address as _, Ledger as _, MockAuth, MockAuthInvoke}, Address, Env, Error, IntoVal, String};
 
 /// Setup stores owned values only — no borrowing client.
 /// MarketplaceClient<'a> borrows Env so it cannot be stored alongside it
@@ -312,21 +312,19 @@ fn mark_default_after_due_sets_defaulted_and_penalizes() {
 }
 
 #[test]
-#[should_panic]
-fn mark_default_before_due_panics() {
-    let s = setup();
+fn mark_default_rejects_before_due() {
+    let s = setup();  // sequence = 100
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
-    let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
-        &1_000_000_000i128, &500u64, &1000u32,
-    );
+    let id = market.create_invoice(&seller, &String::from_str(&s.env, "ACME"), &1_000_000_000i128, &500u64, &1000u32);
     token.faucet(&investor);
     token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
     market.buy_invoice(&id, &investor);
-    market.mark_default(&id); // still ledger 100 < 500
+    // still at sequence 100, due is 500 → NotDueYet
+    let res = market.try_mark_default(&id);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotDueYet as u32))));
 }
 
 #[test]
@@ -413,6 +411,64 @@ fn cancel_rejects_funded() {
     // Invoice is now Funded — cancel_invoice must reject with NotListed
     let res = market.try_cancel_invoice(&id);
     assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotListed as u32))));
+}
+
+#[test]
+#[should_panic] // require_auth failure traps; should_panic is acceptable HERE because the panic is an auth failure, not a contract error code
+fn cancel_rejects_non_seller() {
+    // Build a dedicated env WITHOUT mock_all_auths so auth gates are real
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_id = env.register(
+        test_token::TestToken,
+        (token_admin, 7u32, String::from_str(&env, "USD Coin"), String::from_str(&env, "USDC")),
+    );
+    let market_id = env.register(
+        Marketplace,
+        (admin.clone(), token_id.clone(), token_id.clone()),
+    );
+    let rep_id = env.register(reputation::Reputation, (market_id.clone(),));
+    let market = MarketplaceClient::new(&env, &market_id);
+
+    // Authorize admin for set_reputation
+    env.mock_auths(&[MockAuth {
+        address: &admin,
+        invoke: &MockAuthInvoke {
+            contract: &market_id,
+            fn_name: "set_reputation",
+            args: (rep_id.clone(),).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    market.set_reputation(&rep_id);
+    env.ledger().set_sequence_number(100);
+
+    let seller = Address::generate(&env);
+    // Authorize seller for create_invoice
+    env.mock_auths(&[MockAuth {
+        address: &seller,
+        invoke: &MockAuthInvoke {
+            contract: &market_id,
+            fn_name: "create_invoice",
+            args: (seller.clone(), String::from_str(&env, "ACME"), 1_000_000_000i128, 500u64, 1000u32).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    let id = market.create_invoice(&seller, &String::from_str(&env, "ACME"), &1_000_000_000i128, &500u64, &1000u32);
+
+    let intruder = Address::generate(&env);
+    // Switch to explicit auth: authorize ONLY the intruder, NOT the seller
+    env.mock_auths(&[MockAuth {
+        address: &intruder,
+        invoke: &MockAuthInvoke {
+            contract: &market_id,
+            fn_name: "cancel_invoice",
+            args: (id,).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    market.cancel_invoice(&id); // inv.seller.require_auth() has no matching auth → panic
 }
 
 #[test]
