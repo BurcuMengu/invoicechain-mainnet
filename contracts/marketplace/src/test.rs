@@ -288,3 +288,155 @@ fn settle_records_reputation() {
     assert_eq!(score.settled_count, 1);
     assert_eq!(score.volume, 1_000_000_000i128);
 }
+
+// ── Task 6: mark_default, cancel_invoice, list views ──────────────────────────
+
+#[test]
+fn mark_default_after_due_sets_defaulted_and_penalizes() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    s.env.ledger().set_sequence_number(600); // past due 500
+    market.mark_default(&id);
+    assert_eq!(market.get_invoice(&id).status, Status::Defaulted);
+}
+
+#[test]
+#[should_panic]
+fn mark_default_before_due_panics() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+    market.mark_default(&id); // still ledger 100 < 500
+}
+
+#[test]
+fn cancel_listed_invoice() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    market.cancel_invoice(&id);
+    assert_eq!(market.get_invoice(&id).status, Status::Cancelled);
+}
+
+#[test]
+fn list_open_returns_only_listed() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    market.create_invoice(&seller, &String::from_str(&s.env, "A"), &1_000_000_000i128, &500u64, &1000u32);
+    let id2 = market.create_invoice(&seller, &String::from_str(&s.env, "B"), &2_000_000_000i128, &500u64, &1000u32);
+    market.cancel_invoice(&id2);
+    assert_eq!(market.list_open().len(), 1);
+}
+
+// ── Extra tests (pre-empting review) ──────────────────────────────────────────
+
+#[test]
+fn mark_default_rejects_non_funded() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    // Invoice is Listed (never bought) — mark_default must reject with NotFunded
+    s.env.ledger().set_sequence_number(600);
+    let res = market.try_mark_default(&id);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotFunded as u32))));
+}
+
+#[test]
+fn mark_default_records_reputation() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    s.env.ledger().set_sequence_number(600);
+    market.mark_default(&id);
+
+    let rep = reputation::ReputationClient::new(&s.env, &s.rep_id);
+    let score = rep.get_score(&seller);
+    assert_eq!(score.defaulted_count, 1);
+}
+
+#[test]
+fn cancel_rejects_funded() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    // Invoice is now Funded — cancel_invoice must reject with NotListed
+    let res = market.try_cancel_invoice(&id);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotListed as u32))));
+}
+
+#[test]
+fn list_by_seller_and_owner() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller1 = Address::generate(&s.env);
+    let seller2 = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    // seller1 creates two invoices, seller2 creates one
+    market.create_invoice(&seller1, &String::from_str(&s.env, "A"), &1_000_000_000i128, &500u64, &1000u32);
+    let id2 = market.create_invoice(&seller1, &String::from_str(&s.env, "B"), &2_000_000_000i128, &500u64, &1000u32);
+    market.create_invoice(&seller2, &String::from_str(&s.env, "C"), &1_000_000_000i128, &500u64, &1000u32);
+
+    assert_eq!(market.list_by_seller(&seller1).len(), 2);
+    assert_eq!(market.list_by_seller(&seller2).len(), 1);
+
+    // Investor buys id2 from seller1
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &2_000_000_000i128, &10000);
+    market.buy_invoice(&id2, &investor);
+
+    // After purchase investor owns id2
+    assert_eq!(market.list_by_owner(&investor).len(), 1);
+}

@@ -4,7 +4,7 @@ mod types;
 #[cfg(test)]
 mod test;
 
-use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, token::TokenClient, Address, Env, String};
+use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, token::TokenClient, Address, Env, String, Vec};
 use types::{sale_price, DataKey, Invoice, MarketError, Status};
 
 const DAY_IN_LEDGERS: u32 = 17_280;
@@ -136,10 +136,67 @@ impl Marketplace {
         env.events().publish((symbol_short!("settled"), seller), (id, face_value));
     }
 
-    // default/cancel/views added in later tasks.
+    pub fn cancel_invoice(env: Env, id: u64) {
+        let mut inv = read_invoice(&env, id);
+        inv.seller.require_auth();
+        if inv.status != Status::Listed {
+            panic_with_error!(&env, MarketError::NotListed);
+        }
+        inv.status = Status::Cancelled;
+        write_invoice(&env, &inv);
+        env.events().publish((symbol_short!("cancelled"), inv.seller.clone()), id);
+    }
+
+    pub fn mark_default(env: Env, id: u64) {
+        let mut inv = read_invoice(&env, id);
+        if inv.status != Status::Funded {
+            panic_with_error!(&env, MarketError::NotFunded);
+        }
+        if (env.ledger().sequence() as u64) < inv.due_ledger {
+            panic_with_error!(&env, MarketError::NotDueYet);
+        }
+        // CEI: write state + bump TTL BEFORE cross-contract call and event
+        inv.status = Status::Defaulted;
+        write_invoice(&env, &inv);
+        env.storage().instance().extend_ttl(INVOICE_LIFETIME_THRESHOLD, INVOICE_BUMP_AMOUNT);
+        let rep_addr: Address = env.storage().instance().get(&DataKey::Reputation).unwrap();
+        let rep = reputation::ReputationClient::new(&env, &rep_addr);
+        rep.record_defaulted(&inv.seller);
+        env.events().publish((symbol_short!("defaulted"), inv.seller.clone()), id);
+    }
+
+    pub fn list_open(env: Env) -> Vec<Invoice> {
+        Self::filter(&env, |i| i.status == Status::Listed)
+    }
+
+    pub fn list_by_owner(env: Env, owner: Address) -> Vec<Invoice> {
+        Self::filter(&env, |i| i.owner == owner)
+    }
+
+    pub fn list_by_seller(env: Env, seller: Address) -> Vec<Invoice> {
+        Self::filter(&env, |i| i.seller == seller)
+    }
 
     #[doc(hidden)]
     pub fn _sale_price(_env: Env, face_value: i128, discount_bps: u32) -> i128 {
         sale_price(face_value, discount_bps)
+    }
+}
+
+// Private helper — separate impl block (no #[contractimpl]) so it is NOT exported to the client.
+impl Marketplace {
+    fn filter(env: &Env, pred: impl Fn(&Invoice) -> bool) -> Vec<Invoice> {
+        let next: u64 = env.storage().instance().get(&DataKey::NextId).unwrap_or(0);
+        let mut out = Vec::new(env);
+        let mut i = 0u64;
+        while i < next {
+            if let Some(inv) = env.storage().persistent().get::<_, Invoice>(&DataKey::Invoice(i)) {
+                if pred(&inv) {
+                    out.push_back(inv);
+                }
+            }
+            i += 1;
+        }
+        out
     }
 }
