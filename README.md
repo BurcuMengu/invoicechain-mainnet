@@ -23,14 +23,14 @@ buy, and settle invoices. (No real funds — testnet only.)
 ### Desktop
 
 | Marketplace | Create invoice | Fiat ramp (mock) |
-|---|---|---|
-| ![Marketplace](docs/screenshots/desktop-marketplace.png) | ![Create invoice](docs/screenshots/desktop-create.png) | ![Fiat ramp](docs/screenshots/desktop-ramp.png) |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/desktop-marketplace.png" width="300"> | <img src="docs/screenshots/desktop-create.png" width="300"> | <img src="docs/screenshots/desktop-ramp.png" width="300"> |
 
 ### Mobile responsive
 
 | Marketplace | Create | Fiat ramp |
-|---|---|---|
-| ![Marketplace mobile](docs/screenshots/mobile-marketplace.png) | ![Create mobile](docs/screenshots/mobile-create.png) | ![Ramp mobile](docs/screenshots/mobile-ramp.png) |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/mobile-marketplace.png" width="200"> | <img src="docs/screenshots/mobile-create.png" width="200"> | <img src="docs/screenshots/mobile-ramp.png" width="200"> |
 
 ## Architecture
 
