@@ -14,7 +14,7 @@
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^1.7.3",
     "@sentry/react": "^10.63.0",
-    "@stellar/stellar-sdk": "^13.1.0",
+    "@stellar/stellar-sdk": "^14.6.1",
     "posthog-js": "^1.396.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
