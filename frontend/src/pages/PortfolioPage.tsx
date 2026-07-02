@@ -81,6 +81,7 @@ export default function PortfolioPage() {
         const result = await readTx(await rep.get_score({ party: address }))
         if (!cancelled) setScore(result as unknown as Score)
       } catch (e) {
+        captureError(e)
         if (!cancelled) setScoreError(parseContractError(e))
       } finally {
         if (!cancelled) setScoreLoading(false)

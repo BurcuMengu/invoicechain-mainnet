@@ -140,17 +140,18 @@ export function identifyWallet(address: string): void {
 }
 
 /**
- * Report an error to Sentry if enabled; otherwise log to the console so the
- * failure is never silently swallowed.
+ * Report an error. ALWAYS logs to the browser console (so failures are visible
+ * during debugging, even when Sentry is active) AND reports to Sentry when
+ * monitoring is enabled. Never throws.
  */
 export function captureError(e: unknown, context?: Record<string, unknown>): void {
+  // Always surface in the console for debugging visibility.
+  console.error('[InvoiceChain]', e, context ?? '')
   if (sentryOn) {
     try {
       Sentry.captureException(e, context ? { extra: context } : undefined)
-      return
     } catch {
-      /* fall through to console */
+      /* never throw from monitoring */
     }
   }
-  console.error(e, context)
 }

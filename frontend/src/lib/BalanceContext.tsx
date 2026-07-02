@@ -3,6 +3,7 @@ import { useWallet } from './WalletContext'
 import { getToken } from './clients'
 import { readTx } from './tx'
 import { parseContractError } from './errors'
+import { captureError } from './analytics'
 
 type BalanceState = {
   balance: bigint | null
@@ -40,6 +41,7 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
         const result = await readTx(assembled)
         if (!cancelled) setBalance(result as unknown as bigint)
       } catch (e) {
+        captureError(e)
         if (!cancelled) setError(parseContractError(e))
       } finally {
         if (!cancelled) setLoading(false)
