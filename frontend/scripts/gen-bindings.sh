@@ -3,15 +3,15 @@ set -euo pipefail
 NET=testnet
 
 stellar contract bindings typescript --network "$NET" \
-  --contract-id CAMG7TMIJ5FJ753ARMKBTFCLPBKX2GHESEQZLVAJO33AZTPNDNVBCXYR \
+  --contract-id CDSLEGLUKSZ7X3M2I7DRP2PTKAGJOTAIZ5FVQVFJWTJBMZTJXRLDEUQD \
   --output-dir src/contracts/marketplace --overwrite
 
 stellar contract bindings typescript --network "$NET" \
-  --contract-id CA63PKCVFVYIHDVMRTRSK25E7YFBZGJWEXSCHUHM2LFCLSBFA7PEL7VK \
+  --contract-id CBROMO54YLXSBAU2EDLJDJ7B2LNWGI366W4WMOULJVOFNBQDAZZLCAZA \
   --output-dir src/contracts/token --overwrite
 
 stellar contract bindings typescript --network "$NET" \
-  --contract-id CDEKX5WLSYOR54LUDEQ3UNIK7TDHEKE24U4FEA57XQBP7FGV3UVXIMCP \
+  --contract-id CAX2MPXBTI7QTHZ5G6IWXGLFMXDF2IMQIHSKYQRDNGAO3ZVMY6VBO3K3 \
   --output-dir src/contracts/reputation --overwrite
 
 echo "bindings generated"
