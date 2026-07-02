@@ -6,6 +6,10 @@ mod test;
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env};
 use types::{DataKey, RepError, Score};
 
+const DAY_IN_LEDGERS: u32 = 17_280;
+const SCORE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+const SCORE_LIFETIME_THRESHOLD: u32 = SCORE_BUMP_AMOUNT - DAY_IN_LEDGERS;
+
 fn require_marketplace(env: &Env) {
     let mkt: Address = env.storage().instance().get(&DataKey::Marketplace).unwrap();
     mkt.require_auth();
@@ -36,6 +40,12 @@ impl Reputation {
         s.settled_count += 1;
         s.volume += amount;
         env.storage().persistent().set(&DataKey::Score(party.clone()), &s);
+        env.storage().persistent().extend_ttl(
+            &DataKey::Score(party.clone()),
+            SCORE_LIFETIME_THRESHOLD,
+            SCORE_BUMP_AMOUNT,
+        );
+        env.storage().instance().extend_ttl(SCORE_LIFETIME_THRESHOLD, SCORE_BUMP_AMOUNT);
         env.events().publish((symbol_short!("rep_up"), party), s.settled_count);
     }
 
@@ -44,6 +54,12 @@ impl Reputation {
         let mut s = read_score(&env, &party);
         s.defaulted_count += 1;
         env.storage().persistent().set(&DataKey::Score(party.clone()), &s);
+        env.storage().persistent().extend_ttl(
+            &DataKey::Score(party.clone()),
+            SCORE_LIFETIME_THRESHOLD,
+            SCORE_BUMP_AMOUNT,
+        );
+        env.storage().instance().extend_ttl(SCORE_LIFETIME_THRESHOLD, SCORE_BUMP_AMOUNT);
         env.events().publish((symbol_short!("rep_down"), party), s.defaulted_count);
     }
 
