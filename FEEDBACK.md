@@ -15,12 +15,14 @@ No wallet connection is required to leave feedback, so any visitor can respond.
 
 **4 responses · average rating ★5.0**
 
-| Rating | Feedback | Source |
+| Rating | Feedback | Device |
 |:---:|---|---|
-| ★★★★★ | "Selling an invoice for instant cash in seconds is genuinely impressive. The discount/price math is clear." | desktop |
-| ★★★★★ | "Clean, functional and informative UI working seamlessly — great integrated wallet experience!" | desktop |
-| ★★★★★ | "Marketplace is easy to browse. Would be nice to sort/filter invoices by discount or amount." | mobile |
-| ★★★★★ | "Works well on mobile. A tooltip on 'settle' would help first-time users understand the step." | mobile |
+| ★★★★★ | "Selling an invoice for instant cash in seconds is genuinely impressive. The discount/price math is clear." | Desktop (macOS) |
+| ★★★★★ | "Clean, functional and informative UI working seamlessly — great integrated wallet experience!" | Desktop (macOS) |
+| ★★★★★ | "Marketplace is easy to browse. Would be nice to sort/filter invoices by discount or amount." | Desktop (Windows) |
+| ★★★★★ | "Works well on mobile. A tooltip on 'settle' would help first-time users understand the step." | Mobile (Android) |
+
+(Device is read from each event's PostHog properties — 3 desktop, 1 mobile.)
 
 ## What users liked
 
@@ -31,11 +33,11 @@ No wallet connection is required to leave feedback, so any visitor can respond.
 
 ## Suggestions raised
 
-- **Sort / filter the marketplace** by discount or amount.
-- **A tooltip on "settle"** to help first-time users understand the step.
+- **Sort / filter the marketplace** by discount or amount (desktop user).
+- **A tooltip on "settle"** to help first-time users understand the step
+  (mobile user — confirming the flow works on mobile too).
 
-(Both suggestions came from mobile users — the flow works on mobile, and the
-asks are small usability polish rather than blockers.)
+Both are small usability-polish asks rather than blockers.
 
 ## Actions
 
