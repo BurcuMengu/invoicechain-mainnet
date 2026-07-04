@@ -187,8 +187,9 @@ configured `invoicechain` monitoring project.
 
 Collected in-app via the 💬 feedback widget (rating + message → PostHog +
 localStorage). Early responses average **★5.0**, praising the instant
-cash-for-invoice flow, clear discount/price math, and the clean wallet UX; the
-main suggestion is marketplace sort/filter. Full write-up: **[FEEDBACK.md](FEEDBACK.md)**.
+cash-for-invoice flow, clear discount/price math, and the clean wallet UX;
+suggestions are marketplace sort/filter and a settle tooltip. Full write-up:
+**[FEEDBACK.md](FEEDBACK.md)**.
 
 ## Repo layout
 

@@ -13,13 +13,14 @@ No wallet connection is required to leave feedback, so any visitor can respond.
 
 ## Responses so far
 
-**3 responses · average rating ★5.0**
+**4 responses · average rating ★5.0**
 
 | Rating | Feedback | Source |
 |:---:|---|---|
 | ★★★★★ | "Selling an invoice for instant cash in seconds is genuinely impressive. The discount/price math is clear." | desktop |
 | ★★★★★ | "Clean, functional and informative UI working seamlessly — great integrated wallet experience!" | desktop |
 | ★★★★★ | "Marketplace is easy to browse. Would be nice to sort/filter invoices by discount or amount." | mobile |
+| ★★★★★ | "Works well on mobile. A tooltip on 'settle' would help first-time users understand the step." | mobile |
 
 ## What users liked
 
@@ -30,12 +31,17 @@ No wallet connection is required to leave feedback, so any visitor can respond.
 
 ## Suggestions raised
 
-- **Sort / filter the marketplace** by discount or amount (most actionable request).
+- **Sort / filter the marketplace** by discount or amount.
+- **A tooltip on "settle"** to help first-time users understand the step.
+
+(Both suggestions came from mobile users — the flow works on mobile, and the
+asks are small usability polish rather than blockers.)
 
 ## Actions
 
-- Planned for the next iteration: add sorting/filtering to the Marketplace list
-  (by discount %, face value, and price).
+- Planned for the next iteration: (1) add sorting/filtering to the Marketplace
+  list (by discount %, face value, price), and (2) add an inline explainer /
+  tooltip on the settle action.
 - Continue collecting feedback as more users onboard; this summary is updated
   from the live `feedback_submitted` data.
 
