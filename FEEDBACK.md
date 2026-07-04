@@ -17,10 +17,10 @@ No wallet connection is required to leave feedback, so any visitor can respond.
 
 | Rating | Feedback | Device |
 |:---:|---|---|
-| ★★★★★ | "Selling an invoice for instant cash in seconds is genuinely impressive. The discount/price math is clear." | Desktop (macOS) |
-| ★★★★★ | "Clean, functional and informative UI working seamlessly — great integrated wallet experience!" | Desktop (macOS) |
-| ★★★★★ | "Marketplace is easy to browse. Would be nice to sort/filter invoices by discount or amount." | Desktop (Windows) |
-| ★★★★★ | "Works well on mobile. A tooltip on 'settle' would help first-time users understand the step." | Mobile (Android) |
+| ★★★★★ | "Selling an invoice for instant cash in seconds is genuinely impressive. The discount/price math is clear." | Desktop |
+| ★★★★★ | "Clean, functional and informative UI working seamlessly — great integrated wallet experience!" | Desktop |
+| ★★★★★ | "Marketplace is easy to browse. Would be nice to sort/filter invoices by discount or amount." | Desktop |
+| ★★★★★ | "Works well on mobile. A tooltip on 'settle' would help first-time users understand the step." | Mobile |
 
 (Device is read from each event's PostHog properties — 3 desktop, 1 mobile.)
 
