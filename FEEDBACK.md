@@ -39,13 +39,21 @@ No wallet connection is required to leave feedback, so any visitor can respond.
 
 Both are small usability-polish asks rather than blockers.
 
-## Actions
+## Feedback → improvements shipped
 
-- Planned for the next iteration: (1) add sorting/filtering to the Marketplace
-  list (by discount %, face value, price), and (2) add an inline explainer /
-  tooltip on the settle action.
+Both suggestions from real users were implemented in the next iteration:
+
+| Feedback (real user) | Improvement shipped | Commit |
+|---|---|---|
+| "Marketplace... would be nice to **sort/filter invoices by discount or amount**" | Marketplace **sort** control: Newest · Highest discount · Amount (high→low / low→high) · Price (low→high) | [`92d49a4`](https://github.com/BurcuMengu/invoicechain/commit/92d49a4) |
+| "A **tooltip on 'settle'** would help first-time users understand the step" | **Settle explainer** — hover tooltip (desktop) + an inline caption (mobile) describing what Settle/Mark Default do | [`92d49a4`](https://github.com/BurcuMengu/invoicechain/commit/92d49a4) |
+
+## Next
+
 - Continue collecting feedback as more users onboard; this summary is updated
   from the live `feedback_submitted` data.
+- Candidate next iterations from ongoing feedback: richer marketplace filters
+  (amount/discount ranges), an in-app activity feed, and a settle notification.
 
 > Note: testnet demo — feedback reflects the early user group. Collection is
 > ongoing.
