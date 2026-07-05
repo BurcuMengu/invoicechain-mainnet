@@ -209,6 +209,11 @@ feedback**:
 - 📊 **Responses → Excel:** form responses sync to a linked Google Sheet and are
   exported to `docs/user-responses.xlsx` (added as responses come in).
 
+![Sign-up & feedback form demo](docs/signup-form-demo.gif)
+
+*The published form in action — collecting name, email, Stellar wallet address, a
+1–5 rating, and open feedback.*
+
 ### How feedback drives the next iteration
 
 Real user feedback is turned into shipped changes, each linked to its commit:
