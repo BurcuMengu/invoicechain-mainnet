@@ -194,6 +194,32 @@ cash-for-invoice flow, clear discount/price math, and the clean wallet UX;
 suggestions are marketplace sort/filter and a settle tooltip. Full write-up:
 **[FEEDBACK.md](FEEDBACK.md)**.
 
+## User onboarding & feedback iteration
+
+**Onboarding is frictionless:** connect a wallet → the app auto-funds the testnet
+account with XLM (Friendbot) → one-click test-USDC faucet → first action in
+~30 seconds. Mobile users connect via WalletConnect (Freighter / xBull).
+
+**User data collection.** Beyond the in-app widget, users are registered through a
+Google Form that captures **wallet address, email, name, and a product rating +
+feedback**:
+
+- 📋 **Sign-up / feedback form:** <!-- REPLACE with your Google Form link --> `<GOOGLE_FORM_LINK>`
+- 📊 **Exported responses (Excel):** [docs/user-responses.xlsx](docs/user-responses.xlsx) <!-- add the exported .xlsx here -->
+
+### How feedback drives the next iteration
+
+Real user feedback is turned into shipped changes, each linked to its commit:
+
+| Feedback (real user) | Improvement shipped | Commit |
+|---|---|---|
+| "Sort/filter invoices by discount or amount" | Marketplace **sort** control (discount / amount / price) | [`92d49a4`](https://github.com/BurcuMengu/invoicechain/commit/92d49a4) |
+| "A tooltip on 'settle' would help first-time users" | **Settle explainer** (desktop tooltip + mobile caption) | [`92d49a4`](https://github.com/BurcuMengu/invoicechain/commit/92d49a4) |
+
+**Planned next, from ongoing form + widget feedback:** amount/discount range
+filters, an in-app activity feed, and a settle notification. See
+[FEEDBACK.md](FEEDBACK.md) for the running log.
+
 ## Repo layout
 
 ```
