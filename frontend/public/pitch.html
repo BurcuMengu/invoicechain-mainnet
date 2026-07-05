@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InvoiceChain — Pitch Deck</title>
+<style>
+  :root {
+    --indigo: #4f46e5;
+    --indigo-600: #4338ca;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --bg: #ffffff;
+    --soft: #f1f5ff;
+    --line: #e2e8f0;
+    --green: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.5;
+  }
+  .slide {
+    min-height: 100vh; scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 6vh 8vw; border-bottom: 1px solid var(--line); position: relative;
+  }
+  .kicker { color: var(--indigo); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; margin-bottom: 14px; }
+  h1 { font-size: clamp(34px, 6vw, 68px); line-height: 1.05; letter-spacing: -.02em; }
+  h2 { font-size: clamp(26px, 4vw, 46px); line-height: 1.1; letter-spacing: -.01em; margin-bottom: 22px; }
+  p.lead { font-size: clamp(17px, 2.1vw, 24px); color: var(--muted); max-width: 60ch; margin-top: 16px; }
+  ul { list-style: none; margin-top: 10px; }
+  li { font-size: clamp(15px, 1.8vw, 21px); padding: 9px 0 9px 30px; position: relative; max-width: 62ch; }
+  li::before { content: "▸"; color: var(--indigo); position: absolute; left: 0; top: 9px; }
+  .grid { display: grid; gap: 18px; margin-top: 8px; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .card { background: var(--soft); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; }
+  .card h3 { font-size: clamp(17px, 2vw, 22px); margin-bottom: 8px; }
+  .card p { color: var(--muted); font-size: clamp(14px, 1.6vw, 17px); }
+  .big { font-size: clamp(30px, 5vw, 52px); font-weight: 800; color: var(--indigo); letter-spacing: -.02em; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+  .step { background: #fff; border: 2px solid var(--indigo); color: var(--indigo); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: clamp(14px,1.6vw,18px); }
+  .arrow { color: var(--indigo); font-size: 22px; }
+  .pill { display: inline-block; background: #dcfce7; color: var(--green); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 700; }
+  .brand { color: var(--indigo); }
+  .num { position: absolute; bottom: 22px; right: 8vw; color: var(--muted); font-size: 13px; }
+  code { background: #eef2ff; color: var(--indigo-600); padding: 1px 7px; border-radius: 6px; font-size: .92em; }
+  a { color: var(--indigo); }
+  @media (max-width: 720px) { .cols-2, .cols-3 { grid-template-columns: 1fr; } }
+  @media print { .slide { min-height: 92vh; page-break-after: always; border: none; } html { scroll-snap-type: none; } }
+</style>
+</head>
+<body>
+
+<!-- 1. TITLE -->
+<section class="slide">
+  <div class="kicker">Invoice tokenization &amp; factoring · Stellar (Soroban)</div>
+  <h1><span class="brand">InvoiceChain</span><br />Turn an unpaid invoice into instant cash.</h1>
+  <p class="lead">A trustless marketplace where businesses sell their receivables at a discount for cash today — and investors earn the difference when the invoice settles. Fully on-chain.</p>
+  <p style="margin-top:26px; color:var(--muted)">Live on Stellar testnet · <a href="https://burcumengu.github.io/invoicechain/">burcumengu.github.io/invoicechain</a></p>
+  <div class="num">01</div>
+</section>
+
+<!-- 2. PROBLEM -->
+<section class="slide">
+  <div class="kicker">Problem</div>
+  <h2>Small businesses are cash-starved while waiting to get paid.</h2>
+  <ul>
+    <li>SMEs sell on <strong>30–90 day terms</strong> — their cash is locked in unpaid invoices, so they can't make payroll or restock.</li>
+    <li>Bank factoring is <strong>slow, expensive, and often closed</strong> to small firms.</li>
+    <li>Investors have <strong>no easy, transparent way</strong> to fund these receivables and earn a short-term, asset-backed return.</li>
+    <li>The whole process is <strong>opaque</strong> — no shared record of who owes what or who pays reliably.</li>
+  </ul>
+  <div class="num">02</div>
+</section>
+
+<!-- 3. SOLUTION -->
+<section class="slide">
+  <div class="kicker">Solution</div>
+  <h2>Tokenize the invoice. Sell it at a discount. Settle on-chain.</h2>
+  <p class="lead">InvoiceChain puts the entire lifecycle on Stellar, so a seller gets cash in seconds and an investor gets a verifiable claim — no bank, no paperwork.</p>
+  <div class="flow">
+    <span class="step">Create</span><span class="arrow">→</span>
+    <span class="step">Sell @ discount</span><span class="arrow">→</span>
+    <span class="step">Settle</span><span class="arrow">→</span>
+    <span class="step">Reputation</span>
+  </div>
+  <div class="grid cols-3" style="margin-top:26px">
+    <div class="card"><h3>Seller</h3><p>Lists a 100-USDC invoice at a 10% discount → receives <strong>90 USDC instantly</strong>.</p></div>
+    <div class="card"><h3>Investor</h3><p>Pays 90 now → collects the full <strong>100 at settlement</strong> = 10 profit.</p></div>
+    <div class="card"><h3>Everyone</h3><p>Every settle/default updates an <strong>on-chain reputation</strong> score.</p></div>
+  </div>
+  <div class="num">03</div>
+</section>
+
+<!-- 4. HOW IT WORKS -->
+<section class="slide">
+  <div class="kicker">How it works</div>
+  <h2>A clean, trustless state machine.</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>1 · Create</h3><p>Seller mints an invoice on-chain (amount, due date, debtor, discount). Status: <code>Listed</code>.</p></div>
+    <div class="card"><h3>2 · Buy</h3><p>Investor pays the discounted price directly to the seller. Status: <code>Funded</code>.</p></div>
+    <div class="card"><h3>3 · Settle</h3><p>At maturity the payer transfers the full face value to the investor. Status: <code>Settled</code> → seller's reputation improves.</p></div>
+    <div class="card"><h3>4 · Default</h3><p>Owner-gated, with a grace period. Unpaid past-due invoices are flagged <code>Defaulted</code> → reputation penalty.</p></div>
+  </div>
+  <p class="lead" style="margin-top:20px">The marketplace never custodies funds — all transfers are direct, and every state change is authorized by the right party.</p>
+  <div class="num">04</div>
+</section>
+
+<!-- 5. MARKET -->
+<section class="slide">
+  <div class="kicker">Market opportunity</div>
+  <h2>Invoice factoring is a trillion-dollar market — underserved at the bottom.</h2>
+  <div class="grid cols-3">
+    <div class="card"><div class="big">$3T+</div><p>Global factoring / trade-finance volume annually.</p></div>
+    <div class="card"><div class="big">SMEs</div><p>The most under-banked segment — exactly who bank factoring shuts out.</p></div>
+    <div class="card"><div class="big">Stellar</div><p>Sub-cent fees + USDC + Anchors make micro-factoring economical where legacy rails can't.</p></div>
+  </div>
+  <ul style="margin-top:18px">
+    <li>Beachhead: <strong>emerging-market SMEs</strong> and freelancers/e-exporters where fast, low-cost liquidity is scarce.</li>
+    <li>Stellar's Anchor network is the bridge to <strong>real fiat on/off-ramp</strong> — the piece legacy DeFi lacks.</li>
+  </ul>
+  <div class="num">05</div>
+</section>
+
+<!-- 6. ARCHITECTURE -->
+<section class="slide">
+  <div class="kicker">Architecture</div>
+  <h2>Three Soroban contracts + a React dApp — live on testnet.</h2>
+  <div class="grid cols-3">
+    <div class="card"><h3>marketplace</h3><p>Core registry: create · buy · settle · default · cancel · views. Holds no funds.</p></div>
+    <div class="card"><h3>reputation</h3><p>On-chain trust score, writes gated to the marketplace (cross-contract call).</p></div>
+    <div class="card"><h3>test_token</h3><p>SEP-41 USDC + faucet for onboarding (real USDC SAC on mainnet).</p></div>
+  </div>
+  <div class="grid cols-2" style="margin-top:18px">
+    <div class="card"><h3>Frontend</h3><p>React + Vite + TypeScript + Tailwind, Stellar Wallets Kit (Freighter + WalletConnect for mobile), mobile-responsive.</p></div>
+    <div class="card"><h3>Production</h3><p>GitHub Pages CI/CD, Sentry (errors) + PostHog (analytics + session replay), in-app feedback, privacy notice. <strong>28 contract tests.</strong></p></div>
+  </div>
+  <div class="num">06</div>
+</section>
+
+<!-- 7. TRACTION -->
+<section class="slide">
+  <div class="kicker">Traction &amp; validation</div>
+  <h2>Live, used, and iterating on real feedback.</h2>
+  <div class="grid cols-3">
+    <div class="card"><div class="big">Live</div><p>Deployed on testnet; full create→buy→settle→reputation loop verified end-to-end.</p></div>
+    <div class="card"><div class="big">★5.0</div><p>Early user feedback average — praising instant cash, clear pricing, clean UX.</p></div>
+    <div class="card"><div class="big">Shipped</div><p>Two feedback-driven features already released: marketplace sort + settle explainer.</p></div>
+  </div>
+  <p class="lead" style="margin-top:18px">"Selling an invoice for instant cash in seconds is genuinely impressive." — real user, ★5</p>
+  <div class="num">07</div>
+</section>
+
+<!-- 8. GROWTH -->
+<section class="slide">
+  <div class="kicker">Growth strategy</div>
+  <h2>Frictionless onboarding → community-led distribution.</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>Zero-friction onboarding</h3><p>Auto-funds the wallet (Friendbot), one-click test-USDC faucet, WalletConnect for mobile — connect to first action in ~30s.</p></div>
+    <div class="card"><h3>Distribution</h3><p>Stellar builder &amp; regional communities, SME/founder networks, university &amp; hackathon channels; shareable invite + guided flow.</p></div>
+    <div class="card"><h3>Retention</h3><p>Reputation gives sellers a reason to return and pay well; analytics funnel identifies drop-off.</p></div>
+    <div class="card"><h3>Feedback loop</h3><p>In-app widget → PostHog → prioritized iterations, shipped and linked to commits.</p></div>
+  </div>
+  <div class="num">08</div>
+</section>
+
+<!-- 9. ROADMAP -->
+<section class="slide">
+  <div class="kicker">Roadmap</div>
+  <h2>From testnet MVP to a real factoring rail.</h2>
+  <div class="grid cols-3">
+    <div class="card"><span class="pill">Now</span><h3 style="margin-top:10px">Testnet MVP</h3><p>Full loop live, monitoring, feedback-driven iteration, mobile support.</p></div>
+    <div class="card"><span class="pill">Next</span><h3 style="margin-top:10px">Mainnet + fiat</h3><p>Real USDC SAC, <strong>Anchor (SEP-24)</strong> fiat on/off-ramp, richer filters, activity feed, notifications.</p></div>
+    <div class="card"><span class="pill">Later</span><h3 style="margin-top:10px">Scale</h3><p>Partial factoring &amp; offers/auctions, invoice verification, KYC/compliance, secondary market, insurance layer.</p></div>
+  </div>
+  <div class="num">09</div>
+</section>
+
+<!-- 10. CLOSE -->
+<section class="slide">
+  <div class="kicker">InvoiceChain</div>
+  <h1>Cash today.<br />Trust on-chain.</h1>
+  <p class="lead">Try the live demo, connect a wallet, and run a full invoice in under a minute.</p>
+  <p style="margin-top:24px; font-size:20px"><a href="https://burcumengu.github.io/invoicechain/">burcumengu.github.io/invoicechain</a> &nbsp;·&nbsp; <a href="https://github.com/BurcuMengu/invoicechain">github.com/BurcuMengu/invoicechain</a></p>
+  <div class="num">10</div>
+</section>
+
+</body>
+</html>

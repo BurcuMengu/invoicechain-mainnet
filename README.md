@@ -18,6 +18,9 @@ buy, and settle invoices. (No real funds — testnet only.)
 
 ![InvoiceChain demo](docs/demo.gif)
 
+**Pitch deck:** [burcumengu.github.io/invoicechain/pitch.html](https://burcumengu.github.io/invoicechain/pitch.html)
+(open in a browser; use the browser's Print → Save as PDF to export).
+
 ## Screenshots
 
 ### Desktop
