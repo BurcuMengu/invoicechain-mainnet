@@ -4,6 +4,7 @@
 - **Kapsam commit:** `475c411` (`475c41127e6c93ede44801b7cdb39ee1c156221b`)
 - **Repo:** `BurcuMengu/invoicechain-mainnet`
 - **Level 6 alt-projesi:** #1 — Güvenlik / Audit (mainnet deploy'un ön koşulu)
+- **Master spec:** [`2026-07-10-level6-mainnet-launch-design.md`](2026-07-10-level6-mainnet-launch-design.md) (bu, WS0'ın detaylı spec'idir)
 
 ## 1. Amaç
 
