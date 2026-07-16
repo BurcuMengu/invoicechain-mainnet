@@ -501,7 +501,7 @@ function kv() {
   return { get: async (k: string) => m.get(k) ?? null, put: async (k: string, val: string) => void m.set(k, val) } as unknown as KVNamespace
 }
 const baseEnv = () => ({
-  LAUNCHTUBE_URL: 'https://lt.example', LAUNCHTUBE_TOKEN: 'secret',
+  LAUNCHTUBE_URL: 'https://lt.example', LAUNCHTUBE_TOKEN: 'dummy-not-a-real-token',
   MARKETPLACE_ID: 'CDSLEGLUKSZ7X3M2I7DRP2PTKAGJOTAIZ5FVQVFJWTJBMZTJXRLDEUQD',
   NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015',
   PER_ADDRESS_LIMIT: '3', PER_IP_DAILY_LIMIT: '50', RL: kv(),

@@ -1,0 +1,10 @@
+# GitGuardian config.
+# These paths contain only example/placeholder values used in design docs and
+# unit-test doubles (e.g. a fake LAUNCHTUBE_TOKEN). No real credentials live in
+# the repo — the sponsor Worker's real token is set via `wrangler secret put`
+# and never committed. See sponsor-worker/README.md.
+version: 2
+secret:
+  ignored-paths:
+    - "docs/superpowers/**"
+    - "sponsor-worker/test/**"

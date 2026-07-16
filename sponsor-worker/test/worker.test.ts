@@ -8,7 +8,7 @@ function kv() {
   return { get: async (k: string) => m.get(k) ?? null, put: async (k: string, val: string) => void m.set(k, val) } as unknown as KVNamespace
 }
 const baseEnv = () => ({
-  LAUNCHTUBE_URL: 'https://lt.example', LAUNCHTUBE_TOKEN: 'secret',
+  LAUNCHTUBE_URL: 'https://lt.example', LAUNCHTUBE_TOKEN: 'dummy-not-a-real-token',
   MARKETPLACE_ID: MKT,
   TOKEN_ID: TOKEN,
   NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015',
