@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateInvoke } from '../src/validate'
-import { PASS, MKT, TOKEN, SRC, invokeXdr } from './helpers'
+import { PASS, MKT, TOKEN, SRC, invokeXdr, uploadWasmXdr } from './helpers'
 
 const IDS = { marketplaceId: MKT, tokenId: TOKEN }
 
@@ -25,5 +25,9 @@ describe('validateInvoke', () => {
   it('rejects token with a non-approve fn', () => {
     const r = validateInvoke(invokeXdr(TOKEN, 'transfer'), PASS, IDS)
     expect(r.ok).toBe(false)
+  })
+  it('rejects a non-invoke host function (uploadContractWasm) with 403, not a throw', () => {
+    const r = validateInvoke(uploadWasmXdr(), PASS, IDS)
+    expect(r).toEqual({ ok: false, status: 403, msg: 'not a contract invocation' })
   })
 })

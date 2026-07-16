@@ -12,7 +12,9 @@ const baseEnv = () => ({
   MARKETPLACE_ID: MKT,
   TOKEN_ID: TOKEN,
   NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015',
-  PER_ADDRESS_LIMIT: '3', PER_IP_DAILY_LIMIT: '50', RL: kv(),
+  PER_ADDRESS_LIMIT: '3', PER_IP_DAILY_LIMIT: '50',
+  ALLOWED_ORIGIN: 'https://app.example',
+  RL: kv(),
 })
 function post(xdr: string) {
   return new Request('https://w/', { method: 'POST', headers: { 'cf-connecting-ip': '1.2.3.4' }, body: JSON.stringify({ xdr }) })
@@ -25,7 +27,14 @@ describe('sponsor worker', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ hash: 'h9' }), { status: 200 })))
     const res = await worker.fetch(post(validXdr), baseEnv())
     expect(res.status).toBe(200)
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
     expect(await res.json()).toEqual({ hash: 'h9' })
+  })
+  it('answers an OPTIONS preflight with 204 + CORS headers', async () => {
+    const req = new Request('https://w/', { method: 'OPTIONS' })
+    const res = await worker.fetch(req, baseEnv())
+    expect(res.status).toBe(204)
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
   })
   it('429s after PER_ADDRESS_LIMIT sponsored txs', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ hash: 'h' }), { status: 200 })))

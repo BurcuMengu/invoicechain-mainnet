@@ -27,9 +27,15 @@ export function validateInvoke(txXdr: string, networkPassphrase: string, ids: Al
   if (ops.length !== 1) return { ok: false, status: 403, msg: 'expected exactly one operation' }
   const op = ops[0] as unknown as { type: string; func?: xdr.HostFunction }
   if (op.type !== 'invokeHostFunction' || !op.func) return { ok: false, status: 403, msg: 'not an invoke' }
-  const ic = op.func.invokeContract()
-  const contractId = Address.fromScAddress(ic.contractAddress()).toString()
-  const fn = ic.functionName().toString()
+  let contractId: string
+  let fn: string
+  try {
+    const ic = op.func.invokeContract()
+    contractId = Address.fromScAddress(ic.contractAddress()).toString()
+    fn = ic.functionName().toString()
+  } catch {
+    return { ok: false, status: 403, msg: 'not a contract invocation' }
+  }
 
   if (contractId === ids.marketplaceId) {
     if (!ALLOWED_MARKETPLACE_FNS.has(fn)) return { ok: false, status: 403, msg: 'function not allowlisted' }

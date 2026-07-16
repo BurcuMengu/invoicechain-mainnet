@@ -16,3 +16,12 @@ export function invokeXdr(contractId: string, fnName: string): string {
     .addOperation(op).setTimeout(30).build()
   return tx.toXDR()
 }
+
+/** Build a tx XDR with an InvokeHostFunction op that is NOT an invokeContract
+ *  sub-variant (uploadContractWasm) — used to exercise the host-function guard. */
+export function uploadWasmXdr(): string {
+  const op = Operation.uploadContractWasm({ wasm: Buffer.from([0, 1, 2, 3]) })
+  const tx = new TransactionBuilder(new Account(SRC, '0'), { fee: '100', networkPassphrase: PASS })
+    .addOperation(op).setTimeout(30).build()
+  return tx.toXDR()
+}
