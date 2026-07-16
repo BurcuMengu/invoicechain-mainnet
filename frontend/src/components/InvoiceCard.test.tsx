@@ -6,6 +6,7 @@ import type { Invoice } from '../hooks/useInvoices'
 const mockInvoice: Invoice = {
   id: 1n,
   seller: 'GSELLER000000000000000000000000000000000000000000000000000',
+  debtor: 'GDEBTOR000000000000000000000000000000000000000000000000000',
   debtor_name: 'Acme Corp',
   face_value: 10_000_000_000n,
   discount_bps: 500,   // 5%

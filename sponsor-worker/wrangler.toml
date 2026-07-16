@@ -1,0 +1,16 @@
+# sponsor-worker/wrangler.toml
+name = "invoicechain-sponsor"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+kv_namespaces = [{ binding = "RL", id = "REPLACE_WITH_KV_ID" }]
+
+[vars]
+MARKETPLACE_ID = "REPLACE_WITH_MAINNET_MARKETPLACE_ID"
+TOKEN_ID = "REPLACE_WITH_MAINNET_USDC_SAC_ID"
+NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
+PER_ADDRESS_LIMIT = "3"
+PER_IP_DAILY_LIMIT = "50"
+# Operator sets this to the deployed frontend origin (scheme + host, no trailing slash).
+ALLOWED_ORIGIN = "https://REPLACE_WITH_APP_ORIGIN"
+# LAUNCHTUBE_URL / LAUNCHTUBE_TOKEN set via `wrangler secret put` — NEVER here.

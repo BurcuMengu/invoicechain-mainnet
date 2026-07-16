@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::{types::{MarketError, Status}, Marketplace, MarketplaceClient};
-use soroban_sdk::{testutils::{Address as _, Ledger as _, MockAuth, MockAuthInvoke}, Address, Env, Error, IntoVal, String};
+use soroban_sdk::{testutils::{Address as _, Ledger as _, MockAuth, MockAuthInvoke}, Address, BytesN, Env, Error, IntoVal, String};
 
 /// Setup stores owned values only — no borrowing client.
 /// MarketplaceClient<'a> borrows Env so it cannot be stored alongside it
@@ -46,8 +46,10 @@ fn create_invoice_stores_listed() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let id = market.create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME Corp"),
         &1_000_000_000i128, // 100 USDC face
         &500u64,            // due ledger
@@ -57,6 +59,7 @@ fn create_invoice_stores_listed() {
     assert_eq!(inv.id, 0u64);
     assert_eq!(inv.status, Status::Listed);
     assert_eq!(inv.seller, seller);
+    assert_eq!(inv.debtor, debtor);
     assert_eq!(inv.debtor_name, String::from_str(&s.env, "ACME Corp"));
     assert_eq!(inv.face_value, 1_000_000_000i128);
     assert_eq!(inv.due_ledger, 500u64);
@@ -69,8 +72,10 @@ fn create_invoice_rejects_zero_face_value() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &0i128,
         &500u64,
@@ -84,10 +89,12 @@ fn create_invoice_rejects_invalid_discount() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
 
     // discount_bps = 0 → InvalidDiscount
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &1_000_000i128,
         &500u64,
@@ -98,6 +105,7 @@ fn create_invoice_rejects_invalid_discount() {
     // discount_bps = 9001 → InvalidDiscount
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &1_000_000i128,
         &500u64,
@@ -111,10 +119,12 @@ fn create_invoice_accepts_boundary_discounts() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
 
     // discount_bps = 1 (minimum) → ok
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &1_000_000i128,
         &500u64,
@@ -125,6 +135,7 @@ fn create_invoice_accepts_boundary_discounts() {
     // discount_bps = 9000 (maximum) → ok
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &1_000_000i128,
         &500u64,
@@ -139,10 +150,12 @@ fn create_invoice_rejects_due_in_past() {
     // Sequence number is 100; due_ledger <= 100 must be rejected.
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
 
     // due_ledger == current sequence (100) → DueInPast
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &1_000_000i128,
         &100u64,
@@ -153,6 +166,7 @@ fn create_invoice_rejects_due_in_past() {
     // due_ledger < current sequence (50) → DueInPast
     let res = market.try_create_invoice(
         &seller,
+        &debtor,
         &String::from_str(&s.env, "ACME"),
         &1_000_000i128,
         &50u64,
@@ -167,10 +181,11 @@ fn buy_invoice_transfers_discounted_price_to_seller() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32, // 100 USDC, 10% discount → price 90 USDC
     );
 
@@ -191,11 +206,12 @@ fn buy_invoice_rejects_past_due() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     // Create invoice with due_ledger = 500 (valid at sequence 100)
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
 
@@ -215,10 +231,11 @@ fn buy_invoice_rejects_non_listed() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
 
@@ -252,7 +269,7 @@ fn settle_pays_owner_face_value() {
     let debtor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     token.faucet(&investor);
@@ -277,7 +294,7 @@ fn settle_rejects_non_funded() {
     let debtor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     // Invoice is Listed (not Funded) — settle must reject
@@ -295,7 +312,7 @@ fn settle_records_reputation() {
     let debtor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     token.faucet(&investor);
@@ -313,6 +330,208 @@ fn settle_records_reputation() {
     assert_eq!(score.volume, 1_000_000_000i128);
 }
 
+// ── IC-02: settlement must be paid by the real on-chain debtor ────────────────
+
+#[test]
+fn settle_rejects_non_debtor_payer() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+    let stranger = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    // A stranger (not the invoice debtor) funds the face value and tries to
+    // settle — must be rejected so reputation cannot be forged by a non-debtor.
+    token.faucet(&stranger);
+    token.approve(&stranger, &market.address, &1_000_000_000i128, &10000);
+    let res = market.try_settle(&id, &stranger);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NotDebtor as u32))));
+
+    // Invoice is still Funded and reputation untouched
+    assert_eq!(market.get_invoice(&id).status, Status::Funded);
+    let rep = reputation::ReputationClient::new(&s.env, &s.rep_id);
+    assert_eq!(rep.get_score(&seller).settled_count, 0);
+}
+
+// ── IC-04: due_ledger upper bound prevents overflow in mark_default ────────────
+
+#[test]
+fn create_invoice_rejects_due_too_far() {
+    let s = setup(); // sequence = 100
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+
+    // u64::MAX is astronomically beyond the horizon → DueTooFar (not accepted,
+    // so mark_default's due_ledger + GRACE can never overflow).
+    let res = market.try_create_invoice(
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &u64::MAX, &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::DueTooFar as u32))));
+}
+
+// ── IC-03: debtor_name length is bounded ──────────────────────────────────────
+
+#[test]
+fn create_invoice_rejects_oversized_debtor_name() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+
+    // 65 chars > MAX_DEBTOR_NAME_LEN (64) → NameTooLong
+    let long = String::from_str(&s.env, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    let res = market.try_create_invoice(
+        &seller, &debtor, &long,
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::NameTooLong as u32))));
+}
+
+// ── IC-10: face_value upper bound prevents sale_price overflow ─────────────────
+
+#[test]
+fn create_invoice_rejects_face_too_large() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+
+    // MAX_FACE_VALUE is 10^24; 10^25 must be rejected as FaceTooLarge.
+    let res = market.try_create_invoice(
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
+        &10_000_000_000_000_000_000_000_000i128, &500u64, &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::FaceTooLarge as u32))));
+}
+
+// ── IC-08: circuit breaker (pause) ────────────────────────────────────────────
+
+#[test]
+fn paused_blocks_create_and_buy_but_allows_settle() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    // Create + buy while unpaused
+    let id = market.create_invoice(
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    market.buy_invoice(&id, &investor);
+
+    // Pause the marketplace
+    market.set_paused(&true);
+    assert!(market.is_paused());
+
+    // create_invoice is blocked
+    let res = market.try_create_invoice(
+        &seller, &debtor, &String::from_str(&s.env, "ACME2"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::Paused as u32))));
+
+    // buy_invoice is blocked (create a second invoice before pausing would be
+    // needed; here we just assert the guard triggers on the existing id path by
+    // attempting a buy on a fresh listed invoice is impossible while paused, so
+    // we assert settle still works — the critical "no fund lock" property).
+    token.faucet(&debtor);
+    token.approve(&debtor, &market.address, &1_000_000_000i128, &10000);
+    market.settle(&id, &debtor); // settle is NEVER blocked by pause
+    assert_eq!(market.get_invoice(&id).status, Status::Settled);
+}
+
+#[test]
+fn paused_blocks_buy_invoice() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
+    let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
+    let investor = Address::generate(&s.env);
+
+    let id = market.create_invoice(
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
+        &1_000_000_000i128, &500u64, &1000u32,
+    );
+    market.set_paused(&true);
+
+    token.faucet(&investor);
+    token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
+    let res = market.try_buy_invoice(&id, &investor);
+    assert_eq!(res, Err(Ok(Error::from_contract_error(MarketError::Paused as u32))));
+}
+
+#[test]
+#[should_panic] // admin().require_auth() traps when a non-admin invokes set_paused
+fn set_paused_rejects_non_admin() {
+    let s = setup(); // mock_all_auths on
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+
+    // Authorize ONLY a non-admin intruder for set_paused
+    let intruder = Address::generate(&s.env);
+    s.env.mock_auths(&[MockAuth {
+        address: &intruder,
+        invoke: &MockAuthInvoke {
+            contract: &s.market_id,
+            fn_name: "set_paused",
+            args: (true,).into_val(&s.env),
+            sub_invokes: &[],
+        },
+    }]);
+    market.set_paused(&true); // admin().require_auth() has no matching auth → panic
+}
+
+#[test]
+#[should_panic] // admin().require_auth() traps when a non-admin invokes upgrade
+fn upgrade_rejects_non_admin() {
+    let s = setup(); // mock_all_auths on
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+
+    // Authorize ONLY a non-admin intruder for upgrade
+    let intruder = Address::generate(&s.env);
+    let dummy_hash = BytesN::from_array(&s.env, &[0u8; 32]);
+    s.env.mock_auths(&[MockAuth {
+        address: &intruder,
+        invoke: &MockAuthInvoke {
+            contract: &s.market_id,
+            fn_name: "upgrade",
+            args: (dummy_hash.clone(),).into_val(&s.env),
+            sub_invokes: &[],
+        },
+    }]);
+    market.upgrade(&dummy_hash); // admin().require_auth() has no matching auth → panic
+}
+
+// ── IC-09: deploy-verification getters ────────────────────────────────────────
+
+#[test]
+fn getters_return_wired_addresses() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    // After setup(), reputation is wired to rep_id and token to token_id, and
+    // crucially reputation != token (the placeholder was replaced).
+    assert_eq!(market.reputation(), s.rep_id);
+    assert_eq!(market.token(), s.token_id);
+    assert_ne!(market.reputation(), market.token());
+}
+
 // ── Task 6: mark_default, cancel_invoice, list views ──────────────────────────
 
 #[test]
@@ -321,9 +540,10 @@ fn mark_default_after_due_sets_defaulted_and_penalizes() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     token.faucet(&investor);
@@ -342,8 +562,9 @@ fn mark_default_rejects_before_due() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
-    let id = market.create_invoice(&seller, &String::from_str(&s.env, "ACME"), &1_000_000_000i128, &500u64, &1000u32);
+    let id = market.create_invoice(&seller, &debtor, &String::from_str(&s.env, "ACME"), &1_000_000_000i128, &500u64, &1000u32);
     token.faucet(&investor);
     token.approve(&investor, &market.address, &1_000_000_000i128, &10000);
     market.buy_invoice(&id, &investor);
@@ -359,8 +580,9 @@ fn cancel_listed_invoice() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     market.cancel_invoice(&id);
@@ -372,8 +594,9 @@ fn list_open_returns_only_listed() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
-    market.create_invoice(&seller, &String::from_str(&s.env, "A"), &1_000_000_000i128, &500u64, &1000u32);
-    let id2 = market.create_invoice(&seller, &String::from_str(&s.env, "B"), &2_000_000_000i128, &500u64, &1000u32);
+    let debtor = Address::generate(&s.env);
+    market.create_invoice(&seller, &debtor, &String::from_str(&s.env, "A"), &1_000_000_000i128, &500u64, &1000u32);
+    let id2 = market.create_invoice(&seller, &debtor, &String::from_str(&s.env, "B"), &2_000_000_000i128, &500u64, &1000u32);
     market.cancel_invoice(&id2);
     assert_eq!(market.list_open().len(), 1);
 }
@@ -385,8 +608,9 @@ fn mark_default_rejects_non_funded() {
     let s = setup();
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     // Invoice is Listed (never bought) — mark_default must reject with NotFunded
@@ -401,10 +625,11 @@ fn mark_default_records_reputation() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     token.faucet(&investor);
@@ -427,10 +652,11 @@ fn mark_default_rejects_non_owner() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     token.faucet(&investor);
@@ -460,10 +686,11 @@ fn cancel_rejects_funded() {
     let market = MarketplaceClient::new(&s.env, &s.market_id);
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     let id = market.create_invoice(
-        &seller, &String::from_str(&s.env, "ACME"),
+        &seller, &debtor, &String::from_str(&s.env, "ACME"),
         &1_000_000_000i128, &500u64, &1000u32,
     );
     token.faucet(&investor);
@@ -507,17 +734,18 @@ fn cancel_rejects_non_seller() {
     env.ledger().set_sequence_number(100);
 
     let seller = Address::generate(&env);
+    let debtor = Address::generate(&env);
     // Authorize seller for create_invoice
     env.mock_auths(&[MockAuth {
         address: &seller,
         invoke: &MockAuthInvoke {
             contract: &market_id,
             fn_name: "create_invoice",
-            args: (seller.clone(), String::from_str(&env, "ACME"), 1_000_000_000i128, 500u64, 1000u32).into_val(&env),
+            args: (seller.clone(), debtor.clone(), String::from_str(&env, "ACME"), 1_000_000_000i128, 500u64, 1000u32).into_val(&env),
             sub_invokes: &[],
         },
     }]);
-    let id = market.create_invoice(&seller, &String::from_str(&env, "ACME"), &1_000_000_000i128, &500u64, &1000u32);
+    let id = market.create_invoice(&seller, &debtor, &String::from_str(&env, "ACME"), &1_000_000_000i128, &500u64, &1000u32);
 
     let intruder = Address::generate(&env);
     // Switch to explicit auth: authorize ONLY the intruder, NOT the seller
@@ -540,12 +768,13 @@ fn list_by_seller_and_owner() {
     let token = test_token::TestTokenClient::new(&s.env, &s.token_id);
     let seller1 = Address::generate(&s.env);
     let seller2 = Address::generate(&s.env);
+    let debtor = Address::generate(&s.env);
     let investor = Address::generate(&s.env);
 
     // seller1 creates two invoices, seller2 creates one
-    market.create_invoice(&seller1, &String::from_str(&s.env, "A"), &1_000_000_000i128, &500u64, &1000u32);
-    let id2 = market.create_invoice(&seller1, &String::from_str(&s.env, "B"), &2_000_000_000i128, &500u64, &1000u32);
-    market.create_invoice(&seller2, &String::from_str(&s.env, "C"), &1_000_000_000i128, &500u64, &1000u32);
+    market.create_invoice(&seller1, &debtor, &String::from_str(&s.env, "A"), &1_000_000_000i128, &500u64, &1000u32);
+    let id2 = market.create_invoice(&seller1, &debtor, &String::from_str(&s.env, "B"), &2_000_000_000i128, &500u64, &1000u32);
+    market.create_invoice(&seller2, &debtor, &String::from_str(&s.env, "C"), &1_000_000_000i128, &500u64, &1000u32);
 
     assert_eq!(market.list_by_seller(&seller1).len(), 2);
     assert_eq!(market.list_by_seller(&seller2).len(), 1);

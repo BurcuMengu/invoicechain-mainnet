@@ -7,5 +7,6 @@ export const config = {
     marketplace: 'CDSLEGLUKSZ7X3M2I7DRP2PTKAGJOTAIZ5FVQVFJWTJBMZTJXRLDEUQD',
     reputation: 'CAX2MPXBTI7QTHZ5G6IWXGLFMXDF2IMQIHSKYQRDNGAO3ZVMY6VBO3K3',
   },
+  sponsorEnabled: !!import.meta.env.VITE_SPONSOR_URL,
 }
 export type ContractName = keyof typeof config.contractIds

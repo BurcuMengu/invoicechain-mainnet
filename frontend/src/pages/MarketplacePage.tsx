@@ -7,7 +7,7 @@ import { useWallet } from '../lib/WalletContext'
 import { useToast } from '../lib/ToastContext'
 import { useBalanceCtx } from '../lib/BalanceContext'
 import { getMarketplace, getToken } from '../lib/clients'
-import { runTx } from '../lib/tx'
+import { runTxSponsored } from '../lib/tx'
 import { salePrice } from '../lib/format'
 import { config } from '../lib/config'
 import { track, captureError } from '../lib/analytics'
@@ -80,7 +80,7 @@ export default function MarketplacePage() {
       const currentLedger = await getCurrentLedger()
       const expiration_ledger = currentLedger + 500_000
       const token = getToken(signTransaction, address)
-      await runTx(
+      await runTxSponsored(
         await token.approve({
           from: address,
           spender: config.contractIds.marketplace,
@@ -91,10 +91,16 @@ export default function MarketplacePage() {
 
       // Step 2: buy the invoice
       const mkt = getMarketplace(signTransaction, address)
-      await runTx(await mkt.buy_invoice({ id: invoiceId, investor: address }))
+      const { sponsored } = await runTxSponsored(
+        await mkt.buy_invoice({ id: invoiceId, investor: address }),
+      )
 
       track('invoice_bought', { id: String(invoiceId) })
-      toast.success('Invoice purchased successfully!')
+      toast.success(
+        sponsored
+          ? '⚡ Gasless — ücret sponsor tarafından ödendi'
+          : 'Invoice purchased successfully!',
+      )
       refetch()
       refreshHeader()
     } catch (e) {

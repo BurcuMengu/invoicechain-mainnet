@@ -50,6 +50,25 @@ fn transfer_from_moves_funds_with_allowance() {
 }
 
 #[test]
+#[should_panic(expected = "already initialized")]
+fn constructor_rejects_reinitialization() {
+    // IC-01: a second __constructor call must not silently overwrite Admin/Meta.
+    let env = Env::default();
+    let (_admin, token) = setup(&env);
+    let new_admin = Address::generate(&env);
+    // Re-invoking the constructor on the same contract id must panic.
+    env.as_contract(&token.address, || {
+        TestToken::__constructor(
+            env.clone(),
+            new_admin,
+            7u32,
+            String::from_str(&env, "USD Coin"),
+            String::from_str(&env, "USDC"),
+        );
+    });
+}
+
+#[test]
 fn transfer_moves_funds() {
     let env = Env::default();
     env.mock_all_auths();
