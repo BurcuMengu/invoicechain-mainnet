@@ -155,6 +155,27 @@ The on/off-ramp page is a **mock ramp**: deposits mint test USDC via the faucet
 and withdrawals are **simulated** — this is testnet only, so no real fiat ever
 moves.
 
+## ⚡ Gasless onboarding (fee sponsorship)
+
+New users shouldn't need to acquire XLM before they can do anything. When the
+optional **sponsor Worker** is configured, a user's first few marketplace actions
+(`create_invoice`, `buy_invoice`, `settle`, and the `approve` step they require)
+have their transaction fees paid by a sponsor via
+[Launchtube](https://launchtube.xyz) — the user only signs.
+
+- The frontend signs a transaction and sends the signed XDR to a minimal
+  **Cloudflare Worker** that holds the Launchtube token, enforces an allowlist
+  (only the marketplace calls above + USDC `approve`) and per-address / per-IP
+  rate limits, then forwards it to Launchtube.
+- The feature is **env-gated** by `VITE_SPONSOR_URL`. Unset → identical to the
+  normal wallet-pays-fee flow. Any sponsor failure/over-quota **transparently
+  falls back** to the normal path, so transactions always complete.
+- A "⚡ Gasless" toast confirms when a fee was sponsored.
+
+Setup and deploy steps are in [`sponsor-worker/README.md`](sponsor-worker/README.md);
+the design and abuse model are in
+[`docs/superpowers/specs/2026-07-16-fee-sponsorship-design.md`](docs/superpowers/specs/2026-07-16-fee-sponsorship-design.md).
+
 ## Monitoring & analytics
 
 The frontend ships with production monitoring and product analytics (both
