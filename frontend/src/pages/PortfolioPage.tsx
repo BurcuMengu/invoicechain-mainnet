@@ -4,7 +4,7 @@ import { useWallet } from '../lib/WalletContext'
 import { useToast } from '../lib/ToastContext'
 import { useBalanceCtx } from '../lib/BalanceContext'
 import { getMarketplace, getToken, getReputation } from '../lib/clients'
-import { runTx, readTx } from '../lib/tx'
+import { runTx, readTx, runTxSponsored } from '../lib/tx'
 import { config } from '../lib/config'
 import { fromStroops } from '../lib/format'
 import { useInvoicesBySeller, useInvoicesByOwner } from '../hooks/useInvoices'
@@ -124,7 +124,7 @@ export default function PortfolioPage() {
 
       // Step 1: approve marketplace to pull face_value from payer
       const token = getToken(signTransaction, address)
-      await runTx(
+      await runTxSponsored(
         await token.approve({
           from: address,
           spender: config.contractIds.marketplace,
@@ -135,10 +135,14 @@ export default function PortfolioPage() {
 
       // Step 2: settle the invoice
       const mkt = getMarketplace(signTransaction, address)
-      await runTx(await mkt.settle({ id, payer: address }))
+      const { sponsored } = await runTxSponsored(await mkt.settle({ id, payer: address }))
 
       track('invoice_settled', { id: String(id) })
-      toast.success('Invoice settled successfully!')
+      toast.success(
+        sponsored
+          ? '⚡ Gasless — ücret sponsor tarafından ödendi'
+          : 'Invoice settled successfully!',
+      )
       refetchAll()
       refreshHeader()
     } catch (e) {

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { StrKey } from '@stellar/stellar-sdk'
 import { Server } from '@stellar/stellar-sdk/rpc'
 import { useWallet } from '../lib/WalletContext'
 import { useToast } from '../lib/ToastContext'
 import { getMarketplace } from '../lib/clients'
 import { toStroops } from '../lib/format'
-import { runTx } from '../lib/tx'
+import { runTxSponsored } from '../lib/tx'
 import { config } from '../lib/config'
 import { track, captureError } from '../lib/analytics'
 
@@ -16,6 +17,7 @@ async function getCurrentLedger(): Promise<number> {
 }
 
 interface FieldErrors {
+  debtorAddr?: string
   debtorName?: string
   faceValue?: string
   discountPct?: string
@@ -27,6 +29,7 @@ export default function CreatePage() {
   const { address, connect, signTransaction } = useWallet()
   const toast = useToast()
 
+  const [debtorAddr, setDebtorAddr] = useState('')
   const [debtorName, setDebtorName] = useState('')
   const [faceValue, setFaceValue] = useState('')
   const [discountPct, setDiscountPct] = useState('')
@@ -41,6 +44,9 @@ export default function CreatePage() {
 
   const validate = (): boolean => {
     const errs: FieldErrors = {}
+    if (!StrKey.isValidEd25519PublicKey(debtorAddr.trim())) {
+      errs.debtorAddr = 'A valid debtor wallet address (G...) is required.'
+    }
     if (!debtorName.trim()) {
       errs.debtorName = 'Debtor name is required.'
     }
@@ -97,9 +103,10 @@ export default function CreatePage() {
       const discount_bps = Math.round(pct * 100)
 
       const mkt = getMarketplace(signTransaction, address)
-      await runTx(
+      const { sponsored } = await runTxSponsored(
         await mkt.create_invoice({
           seller: address,
+          debtor: debtorAddr.trim(),
           debtor_name: debtorName.trim(),
           face_value,
           due_ledger,
@@ -107,7 +114,11 @@ export default function CreatePage() {
         }),
       )
       track('invoice_created', { faceValue: String(face_value), discountBps: discount_bps })
-      toast.success('Invoice created successfully!')
+      toast.success(
+        sponsored
+          ? '⚡ Gasless — ücret sponsor tarafından ödendi'
+          : 'Invoice created successfully!',
+      )
       navigate('/portfolio')
     } catch (e) {
       captureError(e)
@@ -128,6 +139,26 @@ export default function CreatePage() {
       )}
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div>
+          <label
+            htmlFor="debtor-addr"
+            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Borçlu cüzdan adresi (G...)
+          </label>
+          <input
+            id="debtor-addr"
+            type="text"
+            value={debtorAddr}
+            onChange={(e) => setDebtorAddr(e.target.value)}
+            placeholder="GABC...XYZ"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+          />
+          {errors.debtorAddr && (
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.debtorAddr}</p>
+          )}
+        </div>
+
         <div>
           <label
             htmlFor="debtor-name"

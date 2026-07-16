@@ -1,3 +1,4 @@
+// @ts-nocheck — auto-generated file
 import { Buffer } from "buffer";
 import { Address } from "@stellar/stellar-sdk";
 import {

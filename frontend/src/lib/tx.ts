@@ -27,8 +27,10 @@ export async function readTx<T>(assembled: { result: T }): Promise<T> {
 }
 
 export interface SponsorableTx<T> {
-  sign: (opts?: unknown) => Promise<void>
-  signed: { toXDR(): string } | null
+  // We only ever call `sign()` with no args; `never` keeps this compatible with
+  // the SDK's AssembledTransaction.sign, which takes a richer optional param.
+  sign: (opts?: never) => Promise<void>
+  signed?: { toXDR(): string } | null
   signAndSend: () => Promise<{ result: T }>
   result: T
 }
