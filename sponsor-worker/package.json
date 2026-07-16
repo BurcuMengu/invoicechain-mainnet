@@ -1,0 +1,8 @@
+{
+  "name": "sponsor-worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "vitest run", "deploy": "wrangler deploy" },
+  "dependencies": { "@stellar/stellar-sdk": "^14.6.1" },
+  "devDependencies": { "vitest": "^2.1.1", "wrangler": "^3.0.0", "@cloudflare/vitest-pool-workers": "^0.5.0" }
+}
