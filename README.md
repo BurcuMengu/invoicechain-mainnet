@@ -143,6 +143,10 @@ the contracts.
 
 ## How to use the app
 
+> 📖 **Full step-by-step walkthrough:** [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md)
+> — wallet setup, USDC trustline, create/buy/settle/default, gasless onboarding,
+> reputation, and troubleshooting.
+
 1. **Connect a wallet** — use the [Freighter](https://www.freighter.app/) wallet
    set to the Stellar **testnet**.
 2. **Claim demo USDC** — on the onboarding page (or the ramp page), claim test
