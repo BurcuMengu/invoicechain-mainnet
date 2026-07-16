@@ -519,6 +519,19 @@ fn upgrade_rejects_non_admin() {
     market.upgrade(&dummy_hash); // admin().require_auth() has no matching auth → panic
 }
 
+// ── IC-09: deploy-verification getters ────────────────────────────────────────
+
+#[test]
+fn getters_return_wired_addresses() {
+    let s = setup();
+    let market = MarketplaceClient::new(&s.env, &s.market_id);
+    // After setup(), reputation is wired to rep_id and token to token_id, and
+    // crucially reputation != token (the placeholder was replaced).
+    assert_eq!(market.reputation(), s.rep_id);
+    assert_eq!(market.token(), s.token_id);
+    assert_ne!(market.reputation(), market.token());
+}
+
 // ── Task 6: mark_default, cancel_invoice, list views ──────────────────────────
 
 #[test]

@@ -35,9 +35,9 @@ Tüm objektif kusurlar düzeltildi; düzeltmeler **37 birim testiyle** (30 marke
 |---|---|---|---|---|
 | Critical | 1 | — | 1 (IC-01) | 1 (IC-01) |
 | High | 2 | 2 (IC-02, IC-03) | — | — |
-| Medium | 5 | 2 (IC-04, IC-08) | 2 (IC-05, IC-06) | 1 (IC-09) |
+| Medium | 5 | 3 (IC-04, IC-08, IC-09) | 2 (IC-05, IC-06) | — |
 | Low | 2 | 2 (IC-07, IC-10) | — | — |
-| **Toplam** | **10** | **6** | **3** | **1** |
+| **Toplam** | **10** | **7** | **3** | — |
 
 > Not: IC-01 hem "Acknowledged" (mainnet'te test_token deploy edilmez, gerçek USDC SAC
 > kullanılır) hem de kod tarafında savunma ekiyle (init guard + testnet-only uyarısı)
@@ -165,16 +165,20 @@ Tüm objektif kusurlar düzeltildi; düzeltmeler **37 birim testiyle** (30 marke
     `paused_blocks_buy_invoice`, `paused_blocks_create_and_buy_but_allows_settle`.
 
 ### IC-09 — Deploy `reputation=token` placeholder + manuel `set_reputation` kırılganlığı
-- **Severity:** Medium · **Durum:** 🟧 Açık — WS1 (mainnet deploy) düzeltecek
+- **Severity:** Medium · **Durum:** ✅ Fixed (`deploy_mainnet.sh` + doğrulama getter'ları)
 - **Konum:** `scripts/deploy_testnet.sh` (placeholder), tüketim: marketplace `settle`
-- **Açıklama:** Deploy, marketplace'i `--reputation $TOKEN_ID` placeholder'ıyla kurup
-  ayrı bir tx'te `set_reputation` çağırıyor. Bu ikinci tx atlanır/başarısız olursa
-  marketplace `reputation==token` ile canlı kalır ve her `settle` revert eder (token'da
-  `record_settled` yok) → tüm funded invoice'lar donar.
-- **Plan:** Mainnet `deploy_mainnet.sh`: reputation'ı **önce** deploy et (veya
-  deterministik/önceden hesaplanmış adres) ve gerçek adresi doğrudan `__constructor`'a
-  ver; deploy sonrası `reputation != token` ve bir `settle` dry-run assert et. Testnet
-  placeholder deseni mainnet'e taşınmayacak.
+- **Açıklama:** Testnet deploy, marketplace'i `--reputation $TOKEN_ID` placeholder'ıyla
+  kurup ayrı bir tx'te `set_reputation` çağırıyordu. Bu ikinci tx atlanır/başarısız
+  olursa marketplace `reputation==token` ile canlı kalır ve her `settle` revert eder
+  (token'da `record_settled` yok) → tüm funded invoice'lar donar.
+- **Düzeltme:**
+  - Marketplace'e `reputation()` ve `token()` view getter'ları eklendi (deploy
+    doğrulanabilirliği + frontend config). **Test:** `getters_return_wired_addresses`.
+  - `scripts/deploy_mainnet.sh` yazıldı: mainnet'te token = **gerçek USDC SAC** (mock
+    deploy edilmez, IC-01), placeholder olarak token yerine **admin** kullanılır, ve
+    deploy sonrası `reputation() == REP_ID`, `token() == USDC_SAC`, `reputation() != token()`
+    assert edilir; herhangi bir adım düşerse (`set -euo pipefail`) `deployments/mainnet.json`
+    **yazılmaz**. Böylece placeholder'ın mainnet'e sızması engellenir.
 
 ### IC-10 — `sale_price`/`volume` checked olmayan i128 → per-invoice DoS
 - **Severity:** Low · **Durum:** ✅ Fixed
@@ -198,10 +202,10 @@ Tüm objektif kusurlar düzeltildi; düzeltmeler **37 birim testiyle** (30 marke
 
 ## 5. Kalan Riskler & Mainnet Öncesi Tavsiyeler
 
-1. **IC-09 (Açık):** `deploy_mainnet.sh` reputation'ı önce deploy edip `reputation != token`
-   ve `settle` dry-run assert etmeli (WS1 — deploy'un ön koşulu).
-2. **IC-01 (deploy):** Mainnet'te test_token **deploy edilmez**; marketplace gerçek
-   **USDC SAC** ile kurulur (WS1).
+1. **IC-09 (Fixed):** `deploy_mainnet.sh` deploy sonrası wiring'i getter'larla assert
+   ediyor; başarısızlıkta `mainnet.json` yazılmıyor. Operatör bu scripti kullanmalı.
+2. **IC-01 (deploy):** `deploy_mainnet.sh` test_token'ı **deploy etmez**; token = gerçek
+   **USDC SAC** (asset'ten türetilir/override edilir). Operatör mock'u asla deploy etmemeli.
 3. **IC-05/IC-08/DD-2 (ops):** Admin, deployer hot-key değil **multisig/donanım cüzdanı**
    olmalı; upgrade/pause anahtarı da aynı korumaya alınmalı.
 4. **IC-06 (ürün):** Anında-avans modeli dokümante edilmeli; kullanıcıya karşı-taraf
@@ -212,9 +216,10 @@ Tüm objektif kusurlar düzeltildi; düzeltmeler **37 birim testiyle** (30 marke
 ## 6. Yeşil Işık Durumu
 
 Tüm **Critical/High** bulgular ele alındı (IC-02, IC-03 **Fixed**; IC-01 mitige + deploy
-kararı). Objektif Medium/Low kusurlar **Fixed**. Kalan Medium bulgular ya bilinçli
-tasarım kararı (IC-05, IC-06 — Acknowledged) ya da deploy adımında kapatılacak (IC-09).
+scriptinde zorlanıyor). Objektif Medium/Low kusurlar (IC-04, IC-07, IC-08, IC-09, IC-10)
+**Fixed**. Kalan Medium bulgular bilinçli tasarım kararı (IC-05, IC-06 — Acknowledged).
 
-> **Sonuç:** Kontrat kod tabanı, **IC-09'un `deploy_mainnet.sh`'te kapatılması ve
-> IC-01/DD-2 deploy önkoşulları (gerçek USDC SAC + multisig admin)** sağlanmak kaydıyla,
-> mainnet deploy'una (WS1) **hazırdır**.
+> **Sonuç:** Kontrat kod tabanı ve `deploy_mainnet.sh`, aşağıdaki **operasyonel
+> önkoşullar** operatör tarafından sağlanmak kaydıyla mainnet deploy'una **hazırdır**:
+> (1) token = gerçek **USDC SAC** (script bunu türetir/doğrular — IC-01),
+> (2) admin = **multisig/donanım cüzdanı** (DD-2/IC-05/IC-08). 37/37 test yeşil, `clippy` temiz.

@@ -120,6 +120,17 @@ impl Marketplace {
         env.storage().instance().get(&DataKey::Paused).unwrap_or(false)
     }
 
+    /// IC-09: expose the wired reputation/token addresses so a deploy script can
+    /// assert the marketplace is correctly configured (reputation != token) and
+    /// the frontend can read them without a hardcoded config.
+    pub fn reputation(env: Env) -> Address {
+        env.storage().instance().get(&DataKey::Reputation).unwrap()
+    }
+
+    pub fn token(env: Env) -> Address {
+        env.storage().instance().get(&DataKey::Token).unwrap()
+    }
+
     pub fn create_invoice(
         env: Env,
         seller: Address,
