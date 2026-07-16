@@ -37,8 +37,10 @@ impl Reputation {
     pub fn record_settled(env: Env, party: Address, amount: i128) {
         require_marketplace(&env);
         let mut s = read_score(&env, &party);
-        s.settled_count += 1;
-        s.volume += amount;
+        // IC-10: saturating_add so reputation accounting can never panic on an
+        // i128/u32 overflow and DoS further settlements for a party.
+        s.settled_count = s.settled_count.saturating_add(1);
+        s.volume = s.volume.saturating_add(amount);
         env.storage().persistent().set(&DataKey::Score(party.clone()), &s);
         env.storage().persistent().extend_ttl(
             &DataKey::Score(party.clone()),
@@ -52,7 +54,7 @@ impl Reputation {
     pub fn record_defaulted(env: Env, party: Address) {
         require_marketplace(&env);
         let mut s = read_score(&env, &party);
-        s.defaulted_count += 1;
+        s.defaulted_count = s.defaulted_count.saturating_add(1); // IC-10
         env.storage().persistent().set(&DataKey::Score(party.clone()), &s);
         env.storage().persistent().extend_ttl(
             &DataKey::Score(party.clone()),
@@ -64,6 +66,16 @@ impl Reputation {
     }
 
     pub fn get_score(env: Env, party: Address) -> Score {
+        // IC-07: bump the Score TTL on reads so an actively-queried reputation
+        // is not archived to a zero default after ~30 days of no writes (which
+        // would silently erase a party's settled history on the next write).
+        if env.storage().persistent().has(&DataKey::Score(party.clone())) {
+            env.storage().persistent().extend_ttl(
+                &DataKey::Score(party.clone()),
+                SCORE_LIFETIME_THRESHOLD,
+                SCORE_BUMP_AMOUNT,
+            );
+        }
         read_score(&env, &party)
     }
 }

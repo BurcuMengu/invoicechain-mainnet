@@ -35,6 +35,10 @@ struct Meta {
     symbol: String,
 }
 
+// ⚠️ IC-01 — TESTNET ONLY. This mock exposes an unauthenticated, uncapped
+// `faucet` that mints tokens to anyone. It MUST NOT be deployed to mainnet:
+// the mainnet marketplace is wired to the canonical USDC Stellar Asset Contract
+// (SAC) address at deploy time instead of this contract. See SECURITY-AUDIT.md.
 const FAUCET_AMOUNT: i128 = 10_000_000_000; // 1000 * 10^7
 
 const DAY_IN_LEDGERS: u32 = 17_280;
@@ -73,6 +77,11 @@ fn write_allowance(env: &Env, from: &Address, spender: &Address, amount: i128, e
 #[contractimpl]
 impl TestToken {
     pub fn __constructor(env: Env, admin: Address, decimal: u32, name: String, symbol: String) {
+        // IC-01: guard against silent re-initialization overwriting Admin/Meta,
+        // matching the marketplace/reputation constructors.
+        if env.storage().instance().has(&DataKey::Admin) {
+            panic!("already initialized");
+        }
         env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage().instance().set(&DataKey::Meta, &Meta { decimal, name, symbol });
         env.storage().instance().extend_ttl(BALANCE_LIFETIME_THRESHOLD, BALANCE_BUMP_AMOUNT);
