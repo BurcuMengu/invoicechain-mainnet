@@ -27,7 +27,7 @@ debtor pays, the investor collects the full face value — with **gasless onboar
 | R7 | Real on-chain tx activity | ⏳ | after mainnet (explorer links) |
 | R8 | Smart contract audit / security review | ✅ | [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) — 10 findings, 7 fixed / 3 acknowledged, 0 open |
 | R9 | Twitter/X launch post | ✅ draft → publish | [`docs/marketing/twitter-launch-thread.md`](docs/marketing/twitter-launch-thread.md) |
-| R10 | Demo/showcase video | ✅ script → record | [`docs/marketing/demo-video-script.md`](docs/marketing/demo-video-script.md) |
+| R10 | Demo/showcase content (GIF) | ✅ | [`docs/demo.gif`](docs/demo.gif) (embedded in README) + shot list [`docs/marketing/demo-gif.md`](docs/marketing/demo-gif.md) |
 | R11 | Ecosystem contribution (blog/tutorial) | ✅ written → publish | [`docs/marketing/blog-invoice-factoring-gasless.md`](docs/marketing/blog-invoice-factoring-gasless.md) |
 | R12 | Advanced feature → **Fee Sponsorship (gasless)** | ✅ | `frontend/src/lib/feeSponsor.ts`, `sponsor-worker/`, [spec](docs/superpowers/specs/2026-07-16-fee-sponsorship-design.md) |
 | R13 | Full technical documentation | ✅ | `README.md`, specs, `DEPLOY.md`, `sponsor-worker/README.md` |
@@ -68,7 +68,7 @@ largely-recoverable USDC float (the gasless feature covers user fees).
 
 ## Publishing steps (R9–R11, free)
 - **R9:** post `twitter-launch-thread.md` with Stellar tags → add the link here.
-- **R10:** record/upload the video using `demo-video-script.md` → add the link.
+- **R10:** demo GIF ships in the repo (`docs/demo.gif`, embedded in README). Optionally capture an updated GIF via `demo-gif.md` and drop it into the launch thread.
 - **R11:** publish `blog-invoice-factoring-gasless.md` on dev.to/Medium/Discord → add the link.
 
 ---
