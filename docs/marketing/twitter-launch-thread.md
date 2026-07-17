@@ -11,7 +11,7 @@
 
 A customer owes you money but won't pay for 60 days? List that invoice, someone buys it at a small discount, and you get paid now. All on-chain.
 
-Demo: [link]
+Demo: https://burcumengu.github.io/invoicechain
 🧵
 
 **2/** Why I made this: small businesses are always waiting on invoices. The money is coming, just not today, and today is when rent and payroll are due.
@@ -40,12 +40,12 @@ So I put the contracts through a tough audit, found 10 issues, and fixed or docu
 - Real USDC on mainnet
 - Gasless via Launchtube and a small Cloudflare Worker
 
-Repo: [link]
+Repo: https://github.com/BurcuMengu/invoicechain-mainnet
 
 **7/** Have a look, try to break it, and tell me what's confusing.
 
-Demo: [link]
-How I built it: [blog link]
+Demo: https://burcumengu.github.io/invoicechain
+How I built it: https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6
 
 Feedback and PRs welcome 🙌
 
