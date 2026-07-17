@@ -28,7 +28,7 @@ debtor pays, the investor collects the full face value — with **gasless onboar
 | R8 | Smart contract audit / security review | ✅ | [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) — 10 findings, 7 fixed / 3 acknowledged, 0 open |
 | R9 | Twitter/X launch post | ✅ draft → publish | [`docs/marketing/twitter-launch-thread.md`](docs/marketing/twitter-launch-thread.md) |
 | R10 | Demo/showcase content (GIF) | ✅ | [`docs/demo.gif`](docs/demo.gif) (embedded in README) + shot list [`docs/marketing/demo-gif.md`](docs/marketing/demo-gif.md) |
-| R11 | Ecosystem contribution (blog/tutorial) | ✅ written → publish | [`docs/marketing/blog-invoice-factoring-gasless.md`](docs/marketing/blog-invoice-factoring-gasless.md) |
+| R11 | Ecosystem contribution (blog/tutorial) | ✅ published | [Medium article](https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6) · source [`docs/marketing/blog-invoice-factoring-gasless.md`](docs/marketing/blog-invoice-factoring-gasless.md) |
 | R12 | Advanced feature → **Fee Sponsorship (gasless)** | ✅ | `frontend/src/lib/feeSponsor.ts`, `sponsor-worker/`, [spec](docs/superpowers/specs/2026-07-16-fee-sponsorship-design.md) |
 | R13 | Full technical documentation | ✅ | `README.md`, specs, `DEPLOY.md`, `sponsor-worker/README.md` |
 | R14 | User guide / documentation | ✅ | [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md) |
@@ -69,7 +69,7 @@ largely-recoverable USDC float (the gasless feature covers user fees).
 ## Publishing steps (R9–R11, free)
 - **R9:** post `twitter-launch-thread.md` with Stellar tags → add the link here.
 - **R10:** demo GIF ships in the repo (`docs/demo.gif`, embedded in README). Optionally capture an updated GIF via `demo-gif.md` and drop it into the launch thread.
-- **R11:** publish `blog-invoice-factoring-gasless.md` on dev.to/Medium/Discord → add the link.
+- **R11:** ✅ published on Medium — https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6
 
 ---
 
