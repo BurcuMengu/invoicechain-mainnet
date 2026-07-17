@@ -52,7 +52,7 @@ Open source, built with Soroban + React.
 Repo: https://github.com/BurcuMengu/invoicechain-mainnet
 
 **5/** Full write-up on how I built it 👇
-https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6
+https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6c
 
 Try it, break it, tell me what's confusing. Feedback welcome 🙌
 
