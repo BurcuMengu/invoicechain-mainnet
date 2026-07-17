@@ -14,6 +14,10 @@ A customer won't pay for 60 days? List that invoice, someone buys it at a discou
 Demo: https://burcumengu.github.io/invoicechain
 🧵
 
+📎 Attach this GIF to tweet 1:
+
+![InvoiceChain demo — create, buy, settle](../demo.gif)
+
 **2/** How it works:
 
 - List an invoice: amount, discount, due date, and who owes you
