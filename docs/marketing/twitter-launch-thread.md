@@ -7,6 +7,22 @@
 
 ---
 
+## Option A — Single tweet (250 chars, attach `docs/demo.gif`)
+
+I built InvoiceChain — sell your unpaid invoices for cash today, on Stellar.
+
+List one, someone buys it at a discount, you get paid now. And you don't need XLM to start: the first actions are gasless.
+
+Demo: https://burcumengu.github.io/invoicechain
+
+#Stellar #Soroban
+
+![InvoiceChain demo — create, buy, settle](../demo.gif)
+
+---
+
+## Option B — Full thread (5 tweets, each under 280)
+
 **1/** I built InvoiceChain — sell your unpaid invoices for cash today, on Stellar.
 
 A customer won't pay for 60 days? List that invoice, someone buys it at a discount, you get paid now. All on-chain.
