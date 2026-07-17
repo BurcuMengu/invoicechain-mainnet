@@ -1,55 +1,52 @@
 # Twitter/X Launch Thread — InvoiceChain (R9)
 
-> Usage: each numbered block is one tweet. Fill in the `[…]` placeholders at
-> publish time (mainnet links go live after deploy). Tag the Stellar ecosystem
-> accounts: **@StellarOrg @BuildOnStellar @DefinitelyStellar**. For visuals, add the
-> demo GIF (`docs/demo.gif`) to tweet 1, and screenshots to the following tweets.
+> How to use: each numbered block is one tweet. Fill the `[...]` placeholders when you
+> post (mainnet links after deploy). Tag the Stellar accounts: **@StellarOrg
+> @BuildOnStellar**. Put the demo GIF (`docs/demo.gif`) on tweet 1 and screenshots on
+> the next few tweets.
 
 ---
 
-**1/ 🧾⚡ Introducing InvoiceChain — an invoice factoring marketplace built on Stellar/Soroban.**
+**1/** I built InvoiceChain: a way to sell your unpaid invoices for cash today, on Stellar.
 
-Businesses turn unpaid invoices into cash today; investors buy them at a discount and earn yield. All on-chain, with **gasless onboarding** — new users can start without holding a single XLM for fees.
+A customer owes you money but won't pay for 60 days? List that invoice, someone buys it at a small discount, and you get paid now. All on-chain.
 
-🔗 Demo: [burcumengu.github.io/invoicechain](https://burcumengu.github.io/invoicechain)
-🧵👇
+Demo: [link]
+🧵
 
-**2/ The problem:** cash flow for SMBs. An invoice gets paid in 30–90 days, but the money is needed today. Traditional factoring is slow, full of middlemen, and opaque.
+**2/** Why I made this: small businesses are always waiting on invoices. The money is coming, just not today, and today is when rent and payroll are due.
 
-**The solution:** tokenize the invoice, sell it at a discount, and when the debtor pays, the investor collects the full amount. No intermediaries, transparent, instant.
+Regular invoice factoring is slow and full of middlemen. I wanted to see if Stellar could make it simpler.
 
-**3/ How it works (create → buy → settle):**
-• The seller lists an invoice (face value, discount, due date, **debtor address**)
-• An investor buys at the discounted price → funds go straight to the seller
-• The debtor pays the full amount at maturity → the investor collects, and the seller's **reputation** grows
-• If it goes unpaid → default, and reputation drops
+**3/** How it works, plainly:
 
-**4/ ⚡ The standout feature — gasless onboarding.**
+- You list an invoice: the amount, a discount, the due date, and who owes you
+- An investor buys it at that discount and pays you right away
+- When your customer pays, the investor gets the full amount
+- If nobody pays by the due date, it's marked as defaulted
 
-The biggest wall in front of a new user: "first, go get some XLM." We tore it down.
+**4/** The part I'm happiest with: you don't need XLM to start.
 
-A sponsor covers the network fee on your first transactions via a **Launchtube** fee-bump. The user just signs. XLM=0 in the wallet → still able to create/buy/settle.
+Normally a new user has to go buy a bit of XLM just to cover network fees. That alone scares a lot of people off. So the first few actions are free to you — a sponsor pays the fee, you just sign.
 
-**5/ 🔒 Security first.**
+**5/** I didn't want to touch mainnet without checking the code first.
 
-Before going to mainnet, we ran a multi-agent **adversarial security audit**: 10 findings, all addressed (no fund-theft, no reentrancy). Reputation inflation, DoS, and arithmetic safety were all fixed with TDD.
+So I put the contracts through a tough audit, found 10 issues, and fixed or documented every one. No way to steal funds, no reentrancy. The full report is in the repo.
 
-Full report in the repo: `SECURITY-AUDIT.md`
+**6/** It's open source and built on Stellar:
 
-**6/ 🛠 Fully open source & Stellar-native:**
-• 3 Soroban contracts (marketplace / reputation / SEP-41 token)
-• React + Stellar Wallets Kit + @stellar/stellar-sdk
-• Mainnet with real USDC (SAC)
-• Gasless via Cloudflare Worker + Launchtube
+- 3 Soroban contracts
+- React + Stellar Wallets Kit
+- Real USDC on mainnet
+- Gasless via Launchtube and a small Cloudflare Worker
 
-Repo: [github.com/BurcuMengu/invoicechain-mainnet]
+Repo: [link]
 
-**7/ Try it, share feedback, contribute 🙌**
+**7/** Have a look, try to break it, and tell me what's confusing.
 
-📱 Live demo: [link]
-📖 User guide: `docs/USER-GUIDE.md`
-📝 Technical write-up on how we built it: [blog link]
+Demo: [link]
+How I built it: [blog link]
 
-A small contribution to the Stellar ecosystem. Questions and PRs welcome!
+Feedback and PRs welcome 🙌
 
-#Stellar #Soroban #DeFi #RWA
+#Stellar #Soroban
