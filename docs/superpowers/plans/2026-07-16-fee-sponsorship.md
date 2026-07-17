@@ -293,7 +293,7 @@ and use `sponsored` to toast/badge "⚡ Gasless" when true (reuse the existing `
 - [ ] **Step 2: Add the `debtor` field to the Create form (audit IC-02)**
 
 `create_invoice` now takes `debtor: Address` before `debtor_name`. Add a required
-"Borçlu cüzdan adresi (G...)" input to `CreatePage.tsx`, validate it is a valid
+"Debtor wallet address (G...)" input to `CreatePage.tsx`, validate it is a valid
 `G...`/`C...` address via `StrKey.isValidEd25519PublicKey` (from `@stellar/stellar-sdk`),
 and pass it as the `debtor` argument. Block submit if empty/invalid.
 

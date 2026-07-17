@@ -116,7 +116,7 @@ export default function CreatePage() {
       track('invoice_created', { faceValue: String(face_value), discountBps: discount_bps })
       toast.success(
         sponsored
-          ? '⚡ Gasless — ücret sponsor tarafından ödendi'
+          ? '⚡ Gasless — fee paid by sponsor'
           : 'Invoice created successfully!',
       )
       navigate('/portfolio')
@@ -144,7 +144,7 @@ export default function CreatePage() {
             htmlFor="debtor-addr"
             className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Borçlu cüzdan adresi (G...)
+            Debtor wallet address (G...)
           </label>
           <input
             id="debtor-addr"

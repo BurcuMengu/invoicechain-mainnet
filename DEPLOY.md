@@ -1,136 +1,136 @@
-# InvoiceChain — Mainnet Launch Runbook (Adım 1 → 4)
+# InvoiceChain — Mainnet Launch Runbook (Step 1 → 4)
 
-Bu, InvoiceChain'i mainnet'e çıkarmanın **sıralı** operatör kılavuzudur. Adımlar
-bağımlıdır — **sırayla** yap. `[U]` = yalnızca sen yapabilirsin (gerçek para/hesap/
-karar). Kod ve scriptler hazır; burada onları çalıştırıyorsun.
+This is the **sequential** operator guide for taking InvoiceChain to mainnet. The steps
+are dependent — do them **in order**. `[U]` = only you can do it (real money/account/
+decision). The code and scripts are ready; here you're running them.
 
-> Ön koşul: WS0 audit ✅, kontrat fix'leri `master`'da ✅. Aşağıdaki her şey
-> `master` üzerinden çalışır.
+> Prerequisite: WS0 audit ✅, contract fixes on `master` ✅. Everything below runs off
+> `master`.
 
 ---
 
-## Adım 1 — Mainnet deploy `[U]`  ⬅️ ASIL KAPI
+## Step 1 — Mainnet deploy `[U]`  ⬅️ THE MAIN GATE
 
-Fix'li kontratları mainnet'e (pubnet) çıkarır. `scripts/deploy_mainnet.sh` gerçek
-**USDC SAC**'ı kullanır (mock deploy edilmez, audit IC-01) ve wiring'i doğrular (IC-09).
+Deploys the fixed contracts to mainnet (pubnet). `scripts/deploy_mainnet.sh` uses the
+real **USDC SAC** (no mock is deployed, audit IC-01) and verifies the wiring (IC-09).
 
-### 1a. Admin anahtarını hazırla (DD-2 — güvenlik için kritik)
-Admin; upgrade / pause / set_reputation yetkisini taşır. **Deployer hot-key'i admin
-yapma** — en az bir donanım cüzdanı, tercihen multisig kullan.
+### 1a. Prepare the admin key (DD-2 — critical for security)
+The admin holds the upgrade / pause / set_reputation authority. **Do not make the
+deployer hot-key the admin** — use at least a hardware wallet, preferably a multisig.
 
-- **Minimum:** donanım cüzdanı (Ledger) adresini admin yap.
-- **Önerilen (multisig):** Bir Stellar hesabına ek signer'lar ekleyip eşikleri
-  yükselt (set_options: `--signer`, `--med-threshold`, `--high-threshold`). Modern
-  CLI'da: `stellar tx new set-options --help` ile flag'leri gör; ya da
-  [Stellar Laboratory](https://laboratory.stellar.org) → "Set Options" ile 2-of-3 kur.
-- Sonuç: `ADMIN_ADDR` = bu (multisig/HW) hesabın G-adresi.
+- **Minimum:** make a hardware wallet (Ledger) address the admin.
+- **Recommended (multisig):** add extra signers to a Stellar account and raise the
+  thresholds (set_options: `--signer`, `--med-threshold`, `--high-threshold`). In the
+  modern CLI: see the flags with `stellar tx new set-options --help`; or set up a 2-of-3
+  via [Stellar Laboratory](https://laboratory.stellar.org) → "Set Options".
+- Result: `ADMIN_ADDR` = the G-address of this (multisig/HW) account.
 
-### 1b. stellar CLI'da mainnet ağını tanımla
+### 1b. Define the mainnet network in the stellar CLI
 ```bash
 stellar network add mainnet \
   --rpc-url https://mainnet.sorobanrpc.com \
   --network-passphrase "Public Global Stellar Network ; September 2015"
 ```
 
-### 1c. Fonlanmış bir deployer anahtarı hazırla
+### 1c. Prepare a funded deployer key
 ```bash
-stellar keys generate deployer-mainnet --network mainnet   # mainnet'te otomatik fonlanmaz
+stellar keys generate deployer-mainnet --network mainnet   # not auto-funded on mainnet
 stellar keys address deployer-mainnet
-# ↑ bu adrese bir borsadan/cüzdandan birkaç XLM gönder (deploy ücretleri için)
+# ↑ send a few XLM to this address from an exchange/wallet (for deploy fees)
 ```
 
-### 1d. Deploy'u çalıştır
+### 1d. Run the deploy
 ```bash
 cd ~/invoicechain-mainnet
-ADMIN_ADDR=<multisig-veya-HW-adresin> ./scripts/deploy_mainnet.sh deployer-mainnet
-# Script: USDC SAC'ı türetir, marketplace + reputation deploy eder, wiring'i
-# doğrular (reputation != token) ve "DEPLOY MAINNET" onayı ister.
+ADMIN_ADDR=<your-multisig-or-HW-address> ./scripts/deploy_mainnet.sh deployer-mainnet
+# Script: derives the USDC SAC, deploys marketplace + reputation, verifies the
+# wiring (reputation != token), and asks for a "DEPLOY MAINNET" confirmation.
 ```
 
-### 1e. Sonucu doğrula
+### 1e. Verify the result
 ```bash
-cat deployments/mainnet.json     # marketplace / reputation / token id'leri
+cat deployments/mainnet.json     # marketplace / reputation / token ids
 ```
-Bu id'ler Adım 2 ve 3'te lazım. `deployments/mainnet.json`'ı commit'le (adresler public).
+You'll need these ids in Steps 2 and 3. Commit `deployments/mainnet.json` (the addresses are public).
 
 ---
 
-## Adım 2 — Prod frontend (mainnet) `[C→U]`  (Adım 1 gerektirir)
+## Step 2 — Prod frontend (mainnet) `[C→U]`  (requires Step 1)
 
-Frontend kodu **env-driven** hazır (`frontend/src/lib/config.ts`) — sadece env
-doldurup build/deploy edeceksin. Kod değişikliği yok.
+The frontend code is ready and **env-driven** (`frontend/src/lib/config.ts`) — you just
+fill in the env and build/deploy. No code changes.
 
-### 2a. Mainnet env'ini ayarla
-`frontend/.env` (veya CI/Pages env) içine, `mainnet.json`'daki id'lerle:
+### 2a. Set up the mainnet env
+In `frontend/.env` (or CI/Pages env), with the ids from `mainnet.json`:
 ```bash
 VITE_NETWORK=mainnet
 VITE_MARKETPLACE_ID=<mainnet.json marketplace>
 VITE_TOKEN_ID=<mainnet.json token (USDC SAC)>
 VITE_REPUTATION_ID=<mainnet.json reputation>
-# VITE_RPC_URL / VITE_NETWORK_PASSPHRASE opsiyonel (mainnet default'ları var)
+# VITE_RPC_URL / VITE_NETWORK_PASSPHRASE optional (mainnet defaults exist)
 ```
-> `VITE_NETWORK=mainnet` olunca faucet/ramp UI otomatik gizlenir (`config.faucetEnabled=false`)
-> ve mainnet RPC/passphrase kullanılır. Kullanıcılar gerçek USDC trustline'ı cüzdanlarında ekler.
+> With `VITE_NETWORK=mainnet`, the faucet/ramp UI is hidden automatically (`config.faucetEnabled=false`)
+> and the mainnet RPC/passphrase is used. Users add the real USDC trustline in their own wallets.
 
 ### 2b. Build + deploy
 ```bash
-cd frontend && npm ci && npm run build     # dist/ üretir
-# mevcut GitHub Pages akışıyla ya da tercih ettiğin host ile yayınla
+cd frontend && npm ci && npm run build     # produces dist/
+# publish via the existing GitHub Pages flow or the host of your choice
 ```
-> Not: Bu repo public olduğunda Pages otomatik deploy tetiklenebilir (bkz. Adım 4).
+> Note: When this repo goes public, a Pages auto-deploy may be triggered (see Step 4).
 
 ---
 
-## Adım 3 — Sponsor Worker deploy (gasless) `[U]`  (Adım 1 gerektirir)
+## Step 3 — Sponsor Worker deploy (gasless) `[U]`  (requires Step 1)
 
-Gasless onboarding'i açar. Ayrıntılı runbook: `sponsor-worker/README.md`.
+Enables gasless onboarding. Detailed runbook: `sponsor-worker/README.md`.
 
-### 3a. Launchtube token'ı edin
-[launchtube.xyz](https://launchtube.xyz) mainnet endpoint'i için bir token al.
+### 3a. Obtain a Launchtube token
+Get a token for the mainnet endpoint at [launchtube.xyz](https://launchtube.xyz).
 
-### 3b. Worker'ı yapılandır + deploy et
+### 3b. Configure + deploy the Worker
 ```bash
 cd ~/invoicechain-mainnet/sponsor-worker && npm install
-npx wrangler kv namespace create RL          # çıkan id'yi wrangler.toml'a yaz
-# wrangler.toml [vars]: MARKETPLACE_ID + TOKEN_ID = mainnet.json değerleri,
-#   ALLOWED_ORIGIN = yayınlanan frontend origin'i (ör. https://burcumengu.github.io)
+npx wrangler kv namespace create RL          # write the resulting id into wrangler.toml
+# wrangler.toml [vars]: MARKETPLACE_ID + TOKEN_ID = mainnet.json values,
+#   ALLOWED_ORIGIN = the published frontend origin (e.g. https://burcumengu.github.io)
 npx wrangler secret put LAUNCHTUBE_URL        # mainnet Launchtube endpoint
-npx wrangler secret put LAUNCHTUBE_TOKEN      # token — asla commit etme
+npx wrangler secret put LAUNCHTUBE_TOKEN      # token — never commit
 npx wrangler deploy
 ```
 
-### 3c. Frontend'i Worker'a bağla
-`frontend/.env`'e ekle ve yeniden build et (Adım 2b):
+### 3c. Connect the frontend to the Worker
+Add to `frontend/.env` and rebuild (Step 2b):
 ```bash
 VITE_SPONSOR_URL=https://invoicechain-sponsor.<subdomain>.workers.dev
 ```
 
 ---
 
-## Adım 4 — Repo'yu public yap `[U]`  (Adım 1'den SONRA)
+## Step 4 — Make the repo public `[U]`  (AFTER Step 1)
 
-Level 6 R1'i karşılar ve branch protection'ı ücretsiz açar. **Mainnet deploy'dan
-önce yapma** — audit, hâlâ-canlı zafiyetli kontratlara karşı yayınlanmasın.
+Satisfies Level 6 R1 and enables branch protection for free. **Don't do it before the
+mainnet deploy** — the audit should not be published against still-live vulnerable contracts.
 
-### 4a. Yayın öncesi kontrol listesi
-- [ ] Mainnet deploy tamam, fix'li kontratlar canlı (Adım 1).
-- [ ] Repo'da gerçek secret yok (`git grep -nE "S[A-Z2-7]{55}"` boş; Launchtube token
-      yalnızca `wrangler secret` ile, commit'te değil).
-- [ ] `deployments/mainnet.json` (public adresler) commit'li.
+### 4a. Pre-publish checklist
+- [ ] Mainnet deploy done, fixed contracts live (Step 1).
+- [ ] No real secrets in the repo (`git grep -nE "S[A-Z2-7]{55}"` is empty; the Launchtube
+      token only via `wrangler secret`, not in a commit).
+- [ ] `deployments/mainnet.json` (public addresses) committed.
 
-### 4b. Görünürlüğü değiştir
+### 4b. Change visibility
 GitHub → repo **Settings → General → Danger Zone → Change repository visibility → Public**.
 
-### 4c. Branch protection'ı aç (artık ücretsiz)
+### 4c. Enable branch protection (now free)
 GitHub → **Settings → Branches → Add rule** (branch: `master`):
 - ✅ Require a pull request before merging
-- ✅ Require status checks to pass → **`contracts`** + **`frontend`** seç
+- ✅ Require status checks to pass → select **`contracts`** + **`frontend`**
 - ✅ Require branches to be up to date before merging
 - ✅ Block force pushes
 
 ---
 
-## Adım 4'ten sonra (bu runbook dışı)
-- **WS4:** 20+ gerçek kullanıcı + on-chain tx (canlı app gerektirir).
-- **WS6:** Twitter launch thread / demo video / ekosistem blog — taslaklar hazırlanır, sonra yayınlanır.
-- **WS7:** `SUBMISSION.md`'de tüm kanıtları topla.
+## After Step 4 (outside this runbook)
+- **WS4:** 20+ real users + on-chain tx (requires the live app).
+- **WS6:** Twitter launch thread / demo video / ecosystem blog — drafts are prepared, then published.
+- **WS7:** Gather all the evidence in `SUBMISSION.md`.

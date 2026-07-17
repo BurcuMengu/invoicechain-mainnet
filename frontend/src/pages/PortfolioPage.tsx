@@ -140,7 +140,7 @@ export default function PortfolioPage() {
       track('invoice_settled', { id: String(id) })
       toast.success(
         sponsored
-          ? '⚡ Gasless — ücret sponsor tarafından ödendi'
+          ? '⚡ Gasless — fee paid by sponsor'
           : 'Invoice settled successfully!',
       )
       refetchAll()
