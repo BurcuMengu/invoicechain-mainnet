@@ -98,7 +98,7 @@ export default function MarketplacePage() {
       track('invoice_bought', { id: String(invoiceId) })
       toast.success(
         sponsored
-          ? '⚡ Gasless — ücret sponsor tarafından ödendi'
+          ? '⚡ Gasless — fee paid by sponsor'
           : 'Invoice purchased successfully!',
       )
       refetch()

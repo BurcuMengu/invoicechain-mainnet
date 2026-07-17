@@ -1,126 +1,126 @@
-# InvoiceChain — WS3: Fee Sponsorship (Gasless Onboarding) — Tasarım / Spec
+# InvoiceChain — WS3: Fee Sponsorship (Gasless Onboarding) — Design / Spec
 
-- **Tarih:** 2026-07-16
+- **Date:** 2026-07-16
 - **Repo:** `BurcuMengu/invoicechain-mainnet`
-- **Level 6 iş kolu:** WS3 — Advanced feature (R12)
+- **Level 6 workstream:** WS3 — Advanced feature (R12)
 - **Master spec:** [`2026-07-10-level6-mainnet-launch-design.md`](2026-07-10-level6-mainnet-launch-design.md)
-- **Önceki iş kolu:** WS0 (audit) ✅, WS1 (mainnet deploy scripti) ✅
+- **Previous workstream:** WS0 (audit) ✅, WS1 (mainnet deploy script) ✅
 
-## 1. Amaç
+## 1. Purpose
 
-Yeni bir kullanıcının **hiç XLM tutmadan** ilk marketplace işlemlerini yapabilmesini
-sağlamak (gasless onboarding). Bu, Level 6'nın en zorlu maddesi olan **R6 (20+ gerçek
-mainnet kullanıcısı)** için asıl sürtünmeyi — "işlem yapmadan önce XLM edinmen gerekir"
-duvarını — kaldırır. Aynı zamanda gerekli **advanced feature (R12)** kanıtıdır.
+Enable a new user to perform their first marketplace actions **without holding any XLM**
+(gasless onboarding). This removes the main friction — the "you must acquire XLM before
+transacting" wall — for **R6 (20+ real mainnet users)**, Level 6's toughest requirement.
+It is also the required **advanced feature (R12)** proof.
 
-## 2. Kapsam
+## 2. Scope
 
-**Kapsam içi:**
-- Bağlı bir cüzdanın (Stellar Wallets Kit) **ilk N marketplace işleminin** (`create_invoice`,
-  `buy_invoice`, `settle`) **işlem ücretinin** bir sponsor tarafından **fee-bump** ile
-  ödenmesi. Kullanıcı işlemini imzalar; ağ ücretini sponsor öder.
-- Sponsorlama **Launchtube** (Stellar hosted submit/fee-bump servisi) üzerinden yapılır.
-- Sponsor kimlik bilgisini (Launchtube token) gizli tutan ve kullanıcı-başına limit
-  uygulayan **minimal bir Cloudflare Worker proxy**.
-- Sponsorlama uygun değilse (özellik kapalı, limit dolu, hata) **şeffaf fallback**:
-  mevcut "cüzdan ücreti öder" yolu.
+**In scope:**
+- A connected wallet's (Stellar Wallets Kit) **first N marketplace transactions** (`create_invoice`,
+  `buy_invoice`, `settle`) having their **transaction fee** paid by a sponsor via **fee-bump**.
+  The user signs their transaction; the sponsor pays the network fee.
+- Sponsorship is performed via **Launchtube** (Stellar's hosted submit/fee-bump service).
+- A **minimal Cloudflare Worker proxy** that keeps the sponsor credential (Launchtube token)
+  secret and enforces per-user limits.
+- **Transparent fallback** when sponsorship is not available (feature disabled, limit reached, error):
+  the existing "wallet pays the fee" path.
 
-**Kapsam dışı:**
-- **Hesap oluşturma / min. reserve fonlaması.** Kullanıcının bağladığı cüzdanın zaten
-  var olan bir Stellar hesabı (G-adresi) olduğu varsayılır. Gasless burada "**ücret için
-  XLM tutmana gerek yok**" demektir, "hesabın olmasına gerek yok" değil.
-- Passkey / smart-wallet (contract account) entegrasyonu.
-- Marketplace dışı işlemlerin sponsorlanması.
+**Out of scope:**
+- **Account creation / min-reserve funding.** The wallet the user connects is assumed to be an
+  already-existing Stellar account (G-address). Here, gasless means "**you don't need to hold XLM
+  for fees**", not "you don't need to have an account".
+- Passkey / smart-wallet (contract account) integration.
+- Sponsoring non-marketplace transactions.
 
-## 3. Mimari
+## 3. Architecture
 
-Üç bileşen; her biri tek sorumluluk, iyi tanımlı arayüz, bağımsız test edilebilir.
+Three components; each with a single responsibility, a well-defined interface, and independently testable.
 
 ```
 [Frontend]  build+sign invoke tx
      │  signed XDR (POST)
      ▼
-[Cloudflare Worker proxy]  ── token gizli, allowlist + rate-limit ──►  [Launchtube]  ──►  Stellar ağı
-     │  (limit/allowlist reddi → 4xx)                                      fee-bump + submit
+[Cloudflare Worker proxy]  ── token secret, allowlist + rate-limit ──►  [Launchtube]  ──►  Stellar network
+     │  (limit/allowlist rejection → 4xx)                                   fee-bump + submit
      ▼
-[Frontend]  başarı → tx result;  reddi/hata → normal cüzdan-öder yoluna fallback
+[Frontend]  success → tx result;  rejection/error → fall back to normal wallet-pays path
 ```
 
-### 3.1 Frontend istemci modülü — `frontend/src/lib/feeSponsor.ts`
-Tek genel fonksiyon, örn:
+### 3.1 Frontend client module — `frontend/src/lib/feeSponsor.ts`
+A single public function, e.g.:
 ```ts
 // enabled = !!import.meta.env.VITE_SPONSOR_URL
 submitSponsored(signedXdr: string): Promise<{ hash: string } | SponsorUnavailable>
 ```
-- `VITE_SPONSOR_URL` yoksa → `SponsorUnavailable` döner (çağıran normal yola düşer).
-- Worker'a imzalı XDR'ı POST eder; 2xx → tx hash; 429/403/5xx → `SponsorUnavailable`.
-- **Güvenlik/erişim mantığı istemcide tutulmaz** (bypass edilebilir); istemci yalnızca
-  "dene, olmazsa düş" yapar. Gerçek kapı Worker'dadır.
+- If `VITE_SPONSOR_URL` is unset → returns `SponsorUnavailable` (the caller falls back to the normal path).
+- POSTs the signed XDR to the Worker; 2xx → tx hash; 429/403/5xx → `SponsorUnavailable`.
+- **Security/access logic is not kept on the client** (it can be bypassed); the client only
+  does "try, and fall back if it fails". The real gate is in the Worker.
 
-### 3.2 Cloudflare Worker proxy — `sponsor-worker/` (yeni, ayrı paket)
-Tek `src/index.ts`. Sorumluluğu:
-1. **Parse & doğrula:** Gelen imzalı XDR'ı `@stellar/stellar-sdk` ile çöz. Tek bir
-   `InvokeHostFunction` op'u olmalı; çağrılan kontrat **`MARKETPLACE_ID`** ve fonksiyon
-   **allowlist**'te (`create_invoice`/`buy_invoice`/`settle`) olmalı; değilse `403`.
-2. **Rate-limit:** İşlem kaynağı hesap (kullanıcı G-adresi) ve istek IP'si üzerinden
-   Cloudflare **KV** sayaçları:
-   - adres başına ömür-boyu **N (varsayılan 3)** sponsorlu işlem,
-   - IP başına **günlük** tavan (KV TTL 24s).
-   - Aşılırsa `429`.
-3. **İlet:** Doğrulanmış XDR'ı gizli `LAUNCHTUBE_TOKEN` ile `LAUNCHTUBE_URL`'e POST eder;
-   Launchtube fee-bump + submit yapar. Sonucu istemciye döner.
-- **Secret'lar** (Worker env, asla frontend'de değil): `LAUNCHTUBE_URL`, `LAUNCHTUBE_TOKEN`,
+### 3.2 Cloudflare Worker proxy — `sponsor-worker/` (new, separate package)
+A single `src/index.ts`. Its responsibilities:
+1. **Parse & validate:** Decode the incoming signed XDR with `@stellar/stellar-sdk`. It must have
+   exactly one `InvokeHostFunction` op; the invoked contract must be **`MARKETPLACE_ID`** and the
+   function must be in the **allowlist** (`create_invoice`/`buy_invoice`/`settle`); otherwise `403`.
+2. **Rate-limit:** Cloudflare **KV** counters keyed on the transaction's source account
+   (the user's G-address) and the request IP:
+   - **N (default 3)** sponsored transactions per address, lifetime,
+   - a **daily** cap per IP (KV TTL 24h).
+   - If exceeded, `429`.
+3. **Forward:** POST the validated XDR to `LAUNCHTUBE_URL` with the secret `LAUNCHTUBE_TOKEN`;
+   Launchtube fee-bumps + submits. Return the result to the client.
+- **Secrets** (Worker env, never in the frontend): `LAUNCHTUBE_URL`, `LAUNCHTUBE_TOKEN`,
   `MARKETPLACE_ID`, `PER_ADDRESS_LIMIT`, `PER_IP_DAILY_LIMIT`.
 
-### 3.3 Frontend entegrasyonu
-Mevcut kontrat-invoke yolunda (`frontend/src/lib/` / ilgili hook) imza sonrası:
-`submitSponsored(xdr)` denenir; `SponsorUnavailable` dönerse mevcut `rpc.sendTransaction`
-yoluna düşülür. Kullanıcıya uygun durumda **"⚡ Gasless"** rozeti; fallback'te sessizce
-normal akış. Tümü `VITE_SPONSOR_URL` ile env-gated — özellik açılıp kapatılabilir,
-mevcut davranışı bozmaz.
+### 3.3 Frontend integration
+In the existing contract-invoke path (`frontend/src/lib/` / the relevant hook), after signing:
+`submitSponsored(xdr)` is attempted; if it returns `SponsorUnavailable`, fall back to the existing
+`rpc.sendTransaction` path. When applicable, show the user a **"⚡ Gasless"** badge; on fallback,
+silently continue the normal flow. It is all env-gated by `VITE_SPONSOR_URL` — the feature can be
+turned on and off, and it does not break existing behavior.
 
-## 4. Abuse / güvenlik modeli
+## 4. Abuse / security model
 
-| Katman | Koruma |
+| Layer | Protection |
 |---|---|
-| Token gizliliği | Launchtube token yalnızca Worker env'inde; frontend'de asla. |
-| Allowlist | Yalnızca `MARKETPLACE_ID` + `create/buy/settle`; başka kontrat/fonksiyon reddedilir. |
-| Per-user limit | KV: adres başına ömür-boyu N; IP başına günlük tavan. |
-| Global bound | Launchtube token quota'sı (üst sınır; tükenirse fallback). |
-| Fail-safe | Worker/limit/hata → istemci normal cüzdan-öder yoluna düşer; işlem yine tamamlanır. |
+| Token secrecy | The Launchtube token lives only in the Worker env; never in the frontend. |
+| Allowlist | Only `MARKETPLACE_ID` + `create/buy/settle`; any other contract/function is rejected. |
+| Per-user limit | KV: N per address, lifetime; a daily cap per IP. |
+| Global bound | Launchtube token quota (upper bound; when exhausted, fallback). |
+| Fail-safe | Worker/limit/error → client falls back to the normal wallet-pays path; the tx still completes. |
 
-**Kalan risk (dokümante):** KV eventual-consistency nedeniyle per-adres limiti "yumuşak"
-hard değil (yarış durumunda birkaç fazla). Kabul edilebilir; asıl global tavan Launchtube
-quota'sıdır. Sybil (çok adres) tam çözülemez — IP tavanı + küçük N ile sınırlandırılır.
+**Residual risk (documented):** Due to KV eventual consistency, the per-address limit is "soft"
+rather than hard (a few extras under a race). Acceptable; the true global cap is the Launchtube
+quota. Sybil (many addresses) cannot be fully solved — it is bounded by the IP cap + a small N.
 
-## 5. Konfigürasyon
+## 5. Configuration
 
-- **Frontend:** `VITE_SPONSOR_URL` (Worker URL). Yoksa özellik kapalı, mevcut akış aynen.
+- **Frontend:** `VITE_SPONSOR_URL` (Worker URL). If unset, the feature is disabled and the existing flow is unchanged.
 - **Worker (secrets):** `LAUNCHTUBE_URL`, `LAUNCHTUBE_TOKEN`, `MARKETPLACE_ID`,
   `PER_ADDRESS_LIMIT=3`, `PER_IP_DAILY_LIMIT`. `wrangler.toml` + KV namespace binding.
-- **[U] kullanıcı adımları:** Launchtube token'ı edin, Cloudflare hesabı + `wrangler deploy`,
-  secret'ları set et, `VITE_SPONSOR_URL`'i frontend env'ine ekle.
+- **[U] user steps:** Obtain a Launchtube token, set up a Cloudflare account + `wrangler deploy`,
+  set the secrets, and add `VITE_SPONSOR_URL` to the frontend env.
 
-## 6. Test
+## 6. Testing
 
-- **`feeSponsor.ts`** (vitest + jsdom): (a) `VITE_SPONSOR_URL` yokken `SponsorUnavailable`;
-  (b) 2xx'te hash döner; (c) 429/403/5xx'te fallback sinyali; (d) fetch hatasında fallback.
-  (Worker `fetch` mock'lanır.)
-- **Worker** (vitest + Miniflare/`unstable_dev`): (a) marketplace-dışı kontrat → 403;
-  (b) allowlist-dışı fonksiyon → 403; (c) limit altında ilet (Launchtube mock) → 2xx;
-  (d) N aşımı → 429; (e) IP günlük tavan → 429.
+- **`feeSponsor.ts`** (vitest + jsdom): (a) `SponsorUnavailable` when `VITE_SPONSOR_URL` is unset;
+  (b) returns hash on 2xx; (c) fallback signal on 429/403/5xx; (d) fallback on a fetch error.
+  (The Worker `fetch` is mocked.)
+- **Worker** (vitest + Miniflare/`unstable_dev`): (a) non-marketplace contract → 403;
+  (b) non-allowlisted function → 403; (c) forward under the limit (Launchtube mocked) → 2xx;
+  (d) exceeding N → 429; (e) IP daily cap → 429.
 
-## 7. Doğrulama & Çıkış Kriterleri
+## 7. Verification & Exit Criteria
 
-- [ ] `feeSponsor.ts` + Worker implemente, tüm birim testleri yeşil.
-- [ ] Özellik `VITE_SPONSOR_URL` ile env-gated; kapalıyken mevcut frontend testleri aynen geçer.
-- [ ] Allowlist + rate-limit Worker'da uygulanıyor ve test ediliyor.
-- [ ] Uçtan uca **gerçek bir gasless invoke** testnet'te çalışıyor (mainnet'e hazır).
-- [ ] README/user-guide'da gasless akışı ve `[U]` kurulum adımları belgeleniyor (WS5).
+- [ ] `feeSponsor.ts` + Worker implemented, all unit tests green.
+- [ ] Feature env-gated by `VITE_SPONSOR_URL`; when off, existing frontend tests pass unchanged.
+- [ ] Allowlist + rate-limit enforced in the Worker and tested.
+- [ ] An end-to-end **real gasless invoke** works on testnet (ready for mainnet).
+- [ ] The gasless flow and `[U]` setup steps are documented in the README/user-guide (WS5).
 
-## 8. Sonraki adımlarla ilişki
+## 8. Relationship to next steps
 
-WS3 çıktısı R12'yi (advanced feature) karşılar ve R6'yı (20+ kullanıcı) doğrudan
-destekler. Frontend'in mainnet'e alınması **WS2**'de, kurulum dokümantasyonu **WS5**'te
-tamamlanır. `create_invoice`'ın artık `debtor: Address` alması (audit IC-02) frontend
-form değişikliğini de gerektirir (WS2) — sponsorlu `create` akışı bunu içermeli.
+The WS3 deliverable satisfies R12 (advanced feature) and directly supports R6 (20+ users).
+Bringing the frontend to mainnet is completed in **WS2**, and the setup documentation in **WS5**.
+`create_invoice` now taking `debtor: Address` (audit IC-02) also requires a frontend form change (WS2)
+— the sponsored `create` flow must include this.

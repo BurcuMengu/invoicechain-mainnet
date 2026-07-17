@@ -1,36 +1,36 @@
-# Demo Video — Senaryo + Çekim Listesi (R10)
+# Demo Video — Script + Shot List (R10)
 
-> Hedef: ~90 saniye, sesli anlatım + ekran kaydı. Testnet app'ten çekilebilir
-> (mainnet gerekmez): [burcumengu.github.io/invoicechain](https://burcumengu.github.io/invoicechain).
-> Araç önerisi: QuickTime/OBS ekran kaydı + (opsiyonel) sesli anlatım. Dışa aktarım:
-> 1080p mp4; sosyal için ayrıca kare/dikey kırpım.
+> Goal: ~90 seconds, voiceover + screen recording. Can be shot from the testnet app
+> (mainnet not required): [burcumengu.github.io/invoicechain](https://burcumengu.github.io/invoicechain).
+> Suggested tools: QuickTime/OBS screen recording + (optional) voiceover. Export:
+> 1080p mp4; plus a square/vertical crop for social.
 >
-> Çekim öncesi hazırlık: iki test cüzdanı (satıcı + yatırımcı), faucet'ten USDC,
-> tarayıcıyı temiz bir pencerede aç, bildirimleri kapat.
+> Pre-shoot prep: two test wallets (seller + investor), USDC from the faucet,
+> open the browser in a clean window, turn off notifications.
 
 ---
 
-## Akış (sahne sahne)
+## Flow (scene by scene)
 
-| # | Süre | Ekran (çekim) | Anlatım / alt yazı |
+| # | Time | Screen (shot) | Narration / subtitle |
 |---|---|---|---|
-| 1 | 0:00–0:08 | Landing page, logo + "tokenize & factor invoices on Stellar" | "InvoiceChain — ödenmemiş faturaları Stellar üzerinde bugün nakde çevir." |
-| 2 | 0:08–0:16 | **Connect** → cüzdan seç → bağlan; üstte adres+bakiye | "Cüzdanını bağla. Yeniysen ve XLM'in yoksa sorun değil — birazdan göreceksin." |
-| 3 | 0:16–0:30 | **Create** sayfası: borçlu adresi, borçlu adı, yüz değeri (100 USDC), iskonto (%10), vade → Create → imza | "Bir fatura oluştur: 100 USDC, %10 iskonto. Borçlunun cüzdanını da giriyoruz — sadece o kapatabilir." |
-| 4 | 0:30–0:38 | İşlem onayında **"⚡ Gasless"** rozeti | "Dikkat: ücreti sponsor ödedi. Cüzdanında XLM tutmana gerek yok." |
-| 5 | 0:38–0:52 | (Yatırımcı cüzdanına geç) **Marketplace**: listelenen fatura → **Buy** → approve + buy → owner değişir | "Yatırımcı olarak iskontolu fiyattan — 90 USDC — satın al. Para anında satıcıya gider." |
-| 6 | 0:52–1:04 | **Portfolio**: fatura Funded → **Settle** (borçlu) → Settled | "Vadede borçlu 100 USDC öder; yatırımcı tam tutarı toplar." |
-| 7 | 1:04–1:14 | Satıcının **itibar puanı** artışı (settled +1) | "Ve satıcının zincir-üstü itibarı yükselir — iyi ödeyenler zamanla daha çok güven kazanır." |
-| 8 | 1:14–1:24 | Repo + `SECURITY-AUDIT.md` + kod hızlı gösterim | "Açık kaynak, Soroban-native ve mainnet öncesi bağımsız güvenlik denetiminden geçti." |
-| 9 | 1:24–1:30 | Kapanış kartı: logo + demo linki + "#Stellar #Soroban" | "Dene: [link]. Faturalar, zincirde." |
+| 1 | 0:00–0:08 | Landing page, logo + "tokenize & factor invoices on Stellar" | "InvoiceChain — turn your unpaid invoices into cash today, on Stellar." |
+| 2 | 0:08–0:16 | **Connect** → pick wallet → connect; address + balance up top | "Connect your wallet. New here with no XLM? No problem — you'll see why in a second." |
+| 3 | 0:16–0:30 | **Create** page: debtor address, debtor name, face value (100 USDC), discount (10%), due date → Create → sign | "Create an invoice: 100 USDC, 10% discount. We enter the debtor's wallet too — only they can settle it." |
+| 4 | 0:30–0:38 | The **"⚡ Gasless"** badge on the transaction confirmation | "Notice: a sponsor paid the fee. You don't need to hold any XLM in your wallet." |
+| 5 | 0:38–0:52 | (Switch to the investor wallet) **Marketplace**: listed invoice → **Buy** → approve + buy → owner changes | "As an investor, buy at the discounted price — 90 USDC. The money goes to the seller instantly." |
+| 6 | 0:52–1:04 | **Portfolio**: invoice Funded → **Settle** (debtor) → Settled | "At maturity the debtor pays 100 USDC; the investor collects the full amount." |
+| 7 | 1:04–1:14 | The seller's **reputation score** going up (settled +1) | "And the seller's on-chain reputation rises — good payers earn more trust over time." |
+| 8 | 1:14–1:24 | Repo + `SECURITY-AUDIT.md` + a quick look at the code | "Open source, Soroban-native, and passed an independent security audit before mainnet." |
+| 9 | 1:24–1:30 | Closing card: logo + demo link + "#Stellar #Soroban" | "Try it: [link]. Invoices, on-chain." |
 
-## Çekim notları
-- 3. ve 5. adımlarda formu **yavaş** doldur; izleyici alanları okuyabilsin.
-- 4. adımdaki "⚡ Gasless" rozetini **yakınlaştır** (en güçlü diferansiyatör).
-- Gerçek tutarlar küçük olsun (100 USDC testnet) — net görünsün.
-- Mainnet canlıya geçince: aynı akışı mainnet'te tekrar çekip "gerçek USDC" vurgusu ekle.
-- Ses yoksa: her sahneye kısa **alt yazı** koy (yukarıdaki "Anlatım" sütunu birebir kullanılabilir).
+## Shot notes
+- In steps 3 and 5, fill out the form **slowly** so viewers can read the fields.
+- **Zoom in** on the "⚡ Gasless" badge in step 4 (it's the strongest differentiator).
+- Keep the amounts small (100 USDC testnet) — so they read clearly.
+- Once mainnet is live: re-shoot the same flow on mainnet and add a "real USDC" emphasis.
+- If there's no audio: add a short **subtitle** to each scene (the "Narration" column above can be used verbatim).
 
-## Yayın
-- Twitter launch thread'in 1. tweet'ine göm (bkz. `twitter-launch-thread.md`).
-- README "Live demo" bölümüne ve submission'a link ekle.
+## Publishing
+- Embed it in tweet 1 of the Twitter launch thread (see `twitter-launch-thread.md`).
+- Add the link to the README "Live demo" section and to the submission.

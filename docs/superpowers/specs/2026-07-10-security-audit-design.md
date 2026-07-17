@@ -1,181 +1,186 @@
-# InvoiceChain — Mainnet-Öncesi Güvenlik Audit'i (Tasarım / Spec)
+# InvoiceChain — Pre-Mainnet Security Audit (Design / Spec)
 
-- **Tarih:** 2026-07-10
-- **Kapsam commit:** `475c411` (`475c41127e6c93ede44801b7cdb39ee1c156221b`)
+- **Date:** 2026-07-10
+- **Scope commit:** `475c411` (`475c41127e6c93ede44801b7cdb39ee1c156221b`)
 - **Repo:** `BurcuMengu/invoicechain-mainnet`
-- **Level 6 alt-projesi:** #1 — Güvenlik / Audit (mainnet deploy'un ön koşulu)
-- **Master spec:** [`2026-07-10-level6-mainnet-launch-design.md`](2026-07-10-level6-mainnet-launch-design.md) (bu, WS0'ın detaylı spec'idir)
+- **Level 6 sub-project:** #1 — Security / Audit (prerequisite for mainnet deploy)
+- **Master spec:** [`2026-07-10-level6-mainnet-launch-design.md`](2026-07-10-level6-mainnet-launch-design.md) (this is the detailed spec for WS0)
 
-## 1. Amaç
+## 1. Objective
 
-InvoiceChain'i Stellar **mainnet**'e (pubnet) çıkarmadan önce üç Soroban
-kontratını (`marketplace`, `reputation`, `test_token`) production-grade bir
-denetimden geçirmek. Gerçek para (gerçek USDC) söz konusu olacağı için, deploy
-öncesi bilinen tüm zafiyet sınıflarını tespit etmek, kritik/yüksek bulguları
-düzeltmek ve düzeltmeleri regresyon testleriyle sabitlemek. Çıktı, ekosistem
-programı için güvenilir, imzalanabilir bir audit raporudur.
+Before launching InvoiceChain onto Stellar **mainnet** (pubnet), put the three
+Soroban contracts (`marketplace`, `reputation`, `test_token`) through a
+production-grade audit. Because real money (real USDC) will be involved, the goal
+is to detect all known vulnerability classes prior to deploy, fix the
+critical/high findings, and lock the fixes down with regression tests. The
+deliverable is a trustworthy, signable audit report suitable for the ecosystem
+program.
 
-## 2. Kapsam
+## 2. Scope
 
-**Kapsam içi (birincil):**
-- `contracts/marketplace` — çekirdek create → buy → settle → default/cancel döngüsü, escrow, cross-contract çağrılar.
+**In scope (primary):**
+- `contracts/marketplace` — the core create → buy → settle → default/cancel cycle, escrow, cross-contract calls.
 - `contracts/reputation` — issuer trust score, marketplace-gating.
-- `contracts/test_token` — SEP-41 mock token + faucet (mainnet'te kaldırılacak/değiştirilecek).
+- `contracts/test_token` — SEP-41 mock token + faucet (to be removed/replaced on mainnet).
 
-**Kapsam içi (ikincil, hafif):**
-- Ops/mainnet güvenlik yüzeyi: admin anahtar yönetimi, mainnet secret/env
-  yönetimi, gerçek USDC SAC'a geçiş, upgrade/pause mimarisi kararları.
+**In scope (secondary, lightweight):**
+- Ops/mainnet security surface: admin key management, mainnet secret/env
+  management, migration to real USDC SAC, upgrade/pause architecture decisions.
 
-**Kapsam dışı:**
-- Derin frontend penetrasyon testi (XSS/CSRF/tedarik zinciri) — yalnızca
-  yüzeysel wallet/secret güvenlik notları eklenir.
-- Mainnet deploy'un kendisi (ayrı alt-proje #2).
+**Out of scope:**
+- Deep frontend penetration testing (XSS/CSRF/supply chain) — only surface-level
+  wallet/secret security notes are added.
+- The mainnet deploy itself (separate sub-project #2).
 
-## 3. Metodoloji — Çok-Ajanlı Adversaryal Audit
+## 3. Methodology — Multi-Agent Adversarial Audit
 
-Orkestrasyon **Workflow** aracıyla deterministik yürütülür. Tüm subagent'lar
-**Opus** ile çalışır (kalite > token maliyeti).
+Orchestration runs deterministically via the **Workflow** tool. All subagents run
+on **Opus** (quality > token cost).
 
-### 3.1 Finder fan-out (paralel)
-Her ajan üç kontratı da tek bir saldırı vektörü merceğinden "kırmaya" çalışır ve
-yapılandırılmış bulgu (structured finding) döndürür:
+### 3.1 Finder fan-out (parallel)
+Each agent tries to "break" all three contracts through the lens of a single
+attack vector and returns a structured finding:
 
-| Ajan | Vektör | Aranan örnekler |
+| Agent | Vector | Examples sought |
 |---|---|---|
-| F1 | Access control / auth | eksik `require_auth`, hatalı `require_marketplace` gating, admin yetki aşımı, auth atlatma |
-| F2 | Aritmetik / overflow | `sale_price` i128 taşması, `volume += amount` taşması, negatif/precision, bölme kayıpları |
-| F3 | Storage / TTL / DoS | `filter()` sınırsız döngüsü, TTL expiry ile veri kaybı, key şişmesi, gas/limit sömürüsü |
-| F4 | Cross-contract / reentrancy | marketplace↔reputation akışı, CEI ihlalleri, kötü niyetli token callback |
-| F5 | Ekonomik / mantık | `settle` payer semantiği, default grace period, discount sınırları, escrow muhasebesi, state-machine geçişleri |
-| F6 | Mainnet / ops | test_token faucet kaldırma, gerçek USDC SAC geçişi, admin key/multisig, upgrade/pause yokluğu, deploy config |
+| F1 | Access control / auth | missing `require_auth`, faulty `require_marketplace` gating, admin privilege escalation, auth bypass |
+| F2 | Arithmetic / overflow | `sale_price` i128 overflow, `volume += amount` overflow, negative/precision, division losses |
+| F3 | Storage / TTL / DoS | unbounded `filter()` loop, data loss via TTL expiry, key bloat, gas/limit exploitation |
+| F4 | Cross-contract / reentrancy | marketplace↔reputation flow, CEI violations, malicious token callback |
+| F5 | Economic / logic | `settle` payer semantics, default grace period, discount bounds, escrow accounting, state-machine transitions |
+| F6 | Mainnet / ops | test_token faucet removal, real USDC SAC migration, admin key/multisig, absence of upgrade/pause, deploy config |
 
-### 3.2 Bulgu boru hattı
+### 3.2 Finding pipeline
 ```
-finders (paralel) → bulguları birleştir + dedup → severity ata
-→ her bulguya bağımsız adversaryal doğrulama (skeptik Opus ajanı)
-→ yalnızca CONFIRMED bulgular rapora
+finders (parallel) → merge + dedup findings → assign severity
+→ independent adversarial verification of each finding (skeptical Opus agent)
+→ only CONFIRMED findings go into the report
 ```
-Adversaryal doğrulama adımı, her bulgu için ayrı bir skeptik ajana "bu gerçekten
-sömürülebilir mi? Somut girdi/durum → yanlış çıktı göster; emin değilsen REFUTED"
-sorusunu sorar. Böylece plausible-ama-yanlış bulgular elenir.
+The adversarial verification step asks a separate skeptical agent, for each
+finding: "Is this really exploitable? Show a concrete input/state → wrong output;
+if you're not sure, REFUTED." This weeds out plausible-but-wrong findings.
 
-### 3.3 Severity ölçeği
-- **Critical** — fon kaybı/çalınması, yetkisiz state mutasyonu, doğrudan sömürülebilir.
-- **High** — koşullu fon riski, kalıcı DoS, ciddi muhasebe hatası.
-- **Medium** — sınırlı koşullarda risk, ölçeklenme/limit sorunu.
-- **Low** — küçük mantık/UX-güvenlik sapması, savunma derinliği eksiği.
-- **Info** — stil/dokümantasyon/gözlem, güvenlik etkisi yok.
+### 3.3 Severity scale
+- **Critical** — loss/theft of funds, unauthorized state mutation, directly exploitable.
+- **High** — conditional fund risk, permanent DoS, serious accounting error.
+- **Medium** — risk under limited conditions, scaling/limit issue.
+- **Low** — minor logic/UX-security deviation, missing defense in depth.
+- **Info** — style/documentation/observation, no security impact.
 
 ## 4. Deliverable — `SECURITY-AUDIT.md`
 
-Gerçek bir Soroban audit raporu formatında, repo kökünde. Bölümler:
+In the format of a real Soroban audit report, at the repo root. Sections:
 
-1. **Özet** — kapsam, commit hash, tarih, denetlenen kontratlar, metodoloji özeti.
-2. **Severity özet tablosu** — sınıf başına bulgu sayısı ve Fixed/Acknowledged durumu.
-3. **Bulgular** — her biri için:
-   - ID (ör. `IC-01`), başlık, severity
-   - Konum: `file:line`
-   - Açıklama + exploit senaryosu (somut girdi/durum → sonuç)
-   - Öneri
-   - **Durum:** Fixed (commit) / Acknowledged (tasarım kararı)
-4. **Düzeltme özeti** — uygulanan yamalar, eklenen testler.
-5. **Kalan riskler & tavsiyeler** — mainnet deploy öncesi operasyonel öneriler.
+1. **Summary** — scope, commit hash, date, audited contracts, methodology overview.
+2. **Severity summary table** — finding count per class and Fixed/Acknowledged status.
+3. **Findings** — for each:
+   - ID (e.g. `IC-01`), title, severity
+   - Location: `file:line`
+   - Description + exploit scenario (concrete input/state → result)
+   - Recommendation
+   - **Status:** Fixed (commit) / Acknowledged (design decision)
+4. **Fix summary** — patches applied, tests added.
+5. **Remaining risks & recommendations** — operational recommendations before mainnet deploy.
 
-## 5. Düzeltme + Test Döngüsü (TDD)
+## 5. Fix + Test Loop (TDD)
 
-Her **CONFIRMED, objektif** bulgu için ana oturumda:
-1. Açığı gösteren **başarısız regresyon testi** yaz (`contracts/<c>/src/test.rs`).
-2. Kontratı düzelt.
-3. Testi yeşile çevir; tüm suite'i çalıştır.
+For each **CONFIRMED, objective** finding, in the main session:
+1. Write a **failing regression test** that demonstrates the flaw (`contracts/<c>/src/test.rs`).
+2. Fix the contract.
+3. Turn the test green; run the full suite.
 
-Düzeltme, ilgili bulgunun `SECURITY-AUDIT.md` durumunu "Fixed" + commit referansı
-olarak günceller.
+The fix updates the corresponding finding's status in `SECURITY-AUDIT.md` to
+"Fixed" + commit reference.
 
-## 6. Tasarım-Kararı Bulguları (Acknowledged) — Gerekçeli
+## 6. Design-Decision Findings (Acknowledged) — With Rationale
 
-Aşağıdaki konular objektif "hata" değil; mainnet risk iştahına bağlı **tercihler**.
-Audit sırasında somut hale getirilir; her biri için kullanıcıya net bir
-"ekle / ekleme" seçeneği **her defasında gerekçeleriyle** sunulur ve seçim rapora
-işlenir. Otomatik uygulanmaz.
+The following topics are not objective "bugs"; they are **choices** that depend on
+mainnet risk appetite. They are made concrete during the audit; for each one, a
+clear "add / don't add" option is presented to the user **each time with its
+rationale**, and the choice is recorded in the report. Nothing is applied
+automatically.
 
-### DD-1 — Upgrade edilebilirlik (upgradeability)
-Kontratlar deploy sonrası sabit; bir bug bulunursa yamalanamaz.
+### DD-1 — Upgradeability
+Contracts are fixed after deploy; if a bug is found, it cannot be patched.
 
-- **Neden EKLENMELİ:** Mainnet'te gerçek para varken keşfedilen bir bug'ı
-  `update_current_contract_wasm` ile düzeltebilmek, fon kaybını önleyebilir.
-  Migrasyon (yeni kontrat + veri taşıma) çok daha pahalı ve kesintili olurdu.
-  Erken aşama bir üründe hata olasılığı yüksektir.
-- **Neden EKLENMEMELİ:** Upgrade yetkisi, admin'e kullanıcı fonlarını/mantığı tek
-  taraflı değiştirme gücü verir — merkezileşme ve güven sorunu. Anahtar çalınırsa
-  saldırgan kontratı kötü niyetli koda yükseltebilir. Değiştirilemezlik (immutability)
-  bazı kullanıcılar için bir güven özelliğidir.
-- **Öneri:** Eklenirse mutlaka multisig/timelock arkasına alınmalı (bkz. DD-2).
+- **Why it SHOULD be added:** On mainnet, with real money at stake, being able to
+  fix a discovered bug via `update_current_contract_wasm` can prevent fund loss.
+  Migration (new contract + data transfer) would be far more expensive and
+  disruptive. In an early-stage product, the probability of a bug is high.
+- **Why it should NOT be added:** Upgrade authority gives the admin unilateral
+  power to change user funds/logic — a centralization and trust concern. If the
+  key is stolen, an attacker could upgrade the contract to malicious code.
+  Immutability is a trust feature for some users.
+- **Recommendation:** If added, it must be placed behind a multisig/timelock (see DD-2).
 
-### DD-2 — Admin anahtar yönetimi (tek anahtar vs multisig)
-`set_reputation` gibi yetkiler tek bir admin anahtarına bağlı.
+### DD-2 — Admin key management (single key vs multisig)
+Privileges like `set_reputation` are tied to a single admin key.
 
-- **Neden MULTISIG'e geçilmeli:** Tek anahtar tek kırılma noktası; çalınırsa admin
-  yetkileri (reputation adresini değiştirme, varsa upgrade) ele geçer. Multisig,
-  tek bir cihaz/anahtar sızıntısında saldırıyı engeller ve operasyonel güveni artırır.
-- **Neden tek anahtar KALMALI:** Multisig operasyonel karmaşıklık, imzacı
-  koordinasyonu ve acil müdahale gecikmesi ekler. Admin yetkisi görece dar
-  (`set_reputation`) olduğu için saldırı yüzeyi sınırlı; solo bir kurucu için
-  multisig aşırı olabilir.
-- **Öneri:** En azından donanım cüzdanı; upgrade eklenirse multisig zorunlu sayılmalı.
+- **Why to move to MULTISIG:** A single key is a single point of failure; if
+  stolen, the admin privileges (changing the reputation address, upgrade if present)
+  are compromised. Multisig blocks the attack from a single device/key leak and
+  increases operational trust.
+- **Why a single key should STAY:** Multisig adds operational complexity, signer
+  coordination, and delay in emergency response. Since the admin authority is
+  relatively narrow (`set_reputation`), the attack surface is limited; for a solo
+  founder, multisig may be overkill.
+- **Recommendation:** At minimum a hardware wallet; if upgrade is added, multisig should be considered mandatory.
 
-### DD-3 — Pause / acil durdurma (circuit breaker)
-Bir sorun anında `create/buy/settle`'ı durduracak switch yok.
+### DD-3 — Pause / emergency stop (circuit breaker)
+There is no switch to halt `create/buy/settle` the moment a problem arises.
 
-- **Neden EKLENMELİ:** Aktif bir sömürü/bug fark edildiğinde kontratı dondurup
-  daha fazla zararı durdurabilmek, incident response'un temel aracıdır. Bir gecede
-  fon akışını kesebilmek mainnet'te değerlidir.
-- **Neden EKLENMEMELİ:** Pause, admin'e kullanıcıların fonlarını/işlemlerini
-  bloke etme gücü verir (censorship/rug riski algısı). Kötüye kullanılırsa
-  kullanıcı `settle` edemez. Ek state + her giriş noktasında kontrol karmaşıklığı.
-- **Öneri:** Eklenirse yalnızca "yeni işlem" (create/buy) durdurulmalı; mevcut
-  funded invoice'ların `settle` edilmesi asla bloke edilmemeli (fon kilitlenmesin).
+- **Why it SHOULD be added:** When an active exploit/bug is noticed, being able to
+  freeze the contract and stop further damage is a fundamental tool of incident
+  response. The ability to cut off fund flow overnight is valuable on mainnet.
+- **Why it should NOT be added:** Pause gives the admin the power to block users'
+  funds/transactions (perception of censorship/rug risk). If misused, a user
+  cannot `settle`. Additional state + control complexity at every entry point.
+- **Recommendation:** If added, only "new transactions" (create/buy) should be
+  haltable; settling existing funded invoices (`settle`) must never be blocked (so
+  funds don't get locked).
 
-### DD-4 — `settle` payer semantiği
-Şu an *herkes* payer olarak bir funded invoice'ı face_value ödeyerek settle edebilir.
+### DD-4 — `settle` payer semantics
+Currently *anyone* can settle a funded invoice as the payer by paying face_value.
 
-- **Neden AÇIK BIRAKILMALI:** Üçüncü taraf ödemesi owner'ın zararına değil — owner
-  face_value alır, seller reputation kazanır. Gerçek dünyada borcu bir garantör/
-  faktör ödeyebilir; esneklik faydalı. Kısıtlama ek karmaşıklık ve gereksiz red.
-- **Neden KISITLANMALI:** "Borçlu dışında biri neden ödesin?" belirsizliği;
-  reputation her zaman `seller`'a yazılıyor, oysa ödeyen farklı olabilir —
-  reputation'ın anlamı bulanıklaşabilir. Beklenmedik ödeme akışları muhasebeyi
-  zorlaştırabilir.
-- **Öneri:** Açık bırak; ama reputation'ın "seller'ın invoice'ı zamanında
-  kapandı" anlamına geldiğini dokümante et (ödeyenin kimliğinden bağımsız).
+- **Why it should be LEFT OPEN:** A third-party payment is not to the owner's
+  detriment — the owner receives face_value and the seller gains reputation. In the
+  real world, a debt can be paid by a guarantor/factor; the flexibility is useful.
+  Restricting it adds complexity and unnecessary rejection.
+- **Why it should be RESTRICTED:** The ambiguity of "why would someone other than
+  the debtor pay?"; reputation is always written to the `seller`, yet the payer may
+  be different — the meaning of reputation can become blurred. Unexpected payment
+  flows can complicate accounting.
+- **Recommendation:** Leave it open; but document that reputation means "the
+  seller's invoice was closed on time" (independent of the payer's identity).
 
-### DD-5 — `filter()` sınırsız döngüsü (indeksleme vs off-chain)
-`list_open`/`list_by_owner`/`list_by_seller`, `0..NextId` aralığını on-chain gezer.
+### DD-5 — Unbounded `filter()` loop (indexing vs off-chain)
+`list_open`/`list_by_owner`/`list_by_seller` traverse the `0..NextId` range on-chain.
 
-- **Neden ON-CHAIN İNDEKS/PAGINATION EKLENMELİ:** Invoice sayısı büyüdükçe bu
-  fonksiyonlar tüm invoice'ları okur — read maliyeti ve limit riski artar; belli
-  bir noktadan sonra çağrı limitlere takılıp DoS'a dönebilir (fonksiyonel bozulma).
-- **Neden EKLENMEMELİ (off-chain'e bırak):** Frontend zaten var ve chain event'lerini
-  (created/funded/settled...) bir indexer/RPC ile toplayabilir; liste sorgularını
-  off-chain yapmak on-chain karmaşıklığı ve depolama maliyetini düşürür. On-chain
-  liste fonksiyonları çoğunlukla kolaylık amaçlı.
-- **Öneri:** On-chain liste fonksiyonlarını "best-effort/limitli" olarak işaretle;
-  production listeleme için event-tabanlı off-chain indexer'ı standart yol yap.
-  (Bu madde aynı zamanda severity'li bir DoS **bulgusu** olarak da ele alınır.)
+- **Why ON-CHAIN INDEX/PAGINATION SHOULD be added:** As the invoice count grows,
+  these functions read all invoices — read cost and limit risk increase; past a
+  certain point the call may hit limits and turn into a DoS (functional breakage).
+- **Why it should NOT be added (leave it off-chain):** The frontend already exists
+  and can aggregate chain events (created/funded/settled...) via an indexer/RPC;
+  doing list queries off-chain reduces on-chain complexity and storage cost. The
+  on-chain list functions are mostly for convenience.
+- **Recommendation:** Mark the on-chain list functions as "best-effort/limited";
+  make the event-based off-chain indexer the standard path for production listing.
+  (This item is also treated as a severity-rated DoS **finding**.)
 
-## 7. Doğrulama & Çıkış Kriterleri
+## 7. Verification & Exit Criteria
 
-Audit "tamam" sayılır ancak şunlar sağlandığında:
-- [ ] Tüm kontratlarda `cargo test` yeşil (yeni regresyon testleri dahil).
-- [ ] `cargo clippy` uyarısız (veya gerekçeli `allow`).
-- [ ] Tüm **Critical** ve **High** bulgular **Fixed**.
-- [ ] Tüm **Medium+** tasarım-kararı bulguları kullanıcıya gerekçeleriyle sunulmuş
-      ve kararı rapora işlenmiş (Fixed veya Acknowledged).
-- [ ] `SECURITY-AUDIT.md` yazılmış ve commit'lenmiş.
-- [ ] Rapor, mainnet deploy alt-projesi (#2) için "yeşil ışık" durumunu belgeliyor.
+The audit counts as "done" only when the following hold:
+- [ ] `cargo test` green across all contracts (including the new regression tests).
+- [ ] `cargo clippy` warning-free (or a justified `allow`).
+- [ ] All **Critical** and **High** findings **Fixed**.
+- [ ] All **Medium+** design-decision findings presented to the user with their
+      rationale, and the decision recorded in the report (Fixed or Acknowledged).
+- [ ] `SECURITY-AUDIT.md` written and committed.
+- [ ] The report documents a "green light" status for the mainnet deploy sub-project (#2).
 
-## 8. Bu Alt-Projenin Sonraki Adımlarla İlişkisi
+## 8. Relationship of This Sub-Project to the Next Steps
 
-Bu audit, Level 6 sırasının ilk adımı:
-`audit (#1) → mainnet deploy (#2) → gerçek kullanıcı adaptasyonu (#3) → launch/pazarlama (#4)`.
-Audit'in "yeşil ışığı" ve DD kararları (özellikle upgrade/admin/pause), #2'deki
-deploy mimarisini doğrudan şekillendirir.
+This audit is the first step of the Level 6 sequence:
+`audit (#1) → mainnet deploy (#2) → real user adoption (#3) → launch/marketing (#4)`.
+The audit's "green light" and the DD decisions (especially upgrade/admin/pause)
+directly shape the deploy architecture in #2.
