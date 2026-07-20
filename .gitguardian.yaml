@@ -8,3 +8,6 @@ secret:
   ignored-paths:
     - "docs/superpowers/**"
     - "sponsor-worker/test/**"
+    # deployments/*.json holds only PUBLIC Stellar addresses (contract ids +
+    # admin account), which GitGuardian's generic detector mis-flags as secrets.
+    - "deployments/**"
