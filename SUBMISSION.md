@@ -5,6 +5,7 @@ invoices and sell them at a discount, investors buy them for yield, and when the
 debtor pays, the investor collects the full face value — with **gasless onboarding**.
 
 - **Repo:** https://github.com/BurcuMengu/invoicechain-mainnet
+- **Live app (mainnet):** https://burcumengu.github.io/invoicechain-mainnet/
 - **Live demo (testnet):** https://burcumengu.github.io/invoicechain
 - **User guide:** [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md)
 - **Security audit:** [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md)
@@ -22,7 +23,7 @@ debtor pays, the investor collects the full face value — with **gasless onboar
 | R2 | 30+ meaningful commits | ✅ | **87 commits** (`git rev-list --count HEAD`) |
 | R3 | Contracts deployed on mainnet | ✅ | live on Stellar mainnet — [marketplace tx](https://stellar.expert/explorer/public/tx/c20b4f1b2aafd4ebbd431e5ad85669e0e6c6a4bdb6dc20a6ee3e98ff97a56cff) |
 | R4 | Mainnet contract addresses | ✅ | [`deployments/mainnet.json`](deployments/mainnet.json) — marketplace [`CD76…RI53F`](https://stellar.expert/explorer/public/contract/CD76S7XCNIC3Q64JKKX66YS4PQA4QLRKATRAGK6HZBC5KGKDSMFRI53F), reputation [`CBP6…NXX4F`](https://stellar.expert/explorer/public/contract/CBP63ILG2LEVJLQYADHZFNV3YDT4FRVG3O4E76ENNKMLI4XE54BNXX4F), token = canonical USDC SAC |
-| R5 | Live mainnet app | ⏳ deploy-ready | env-driven `frontend/src/lib/config.ts`, `DEPLOY.md §2` |
+| R5 | Live mainnet app | ✅ | **[burcumengu.github.io/invoicechain-mainnet](https://burcumengu.github.io/invoicechain-mainnet/)** — live, built against the mainnet contract ids |
 | R6 | 20+ verified mainnet users | ⏳ | onboarding form ready (R15); after mainnet |
 | R7 | Real on-chain tx activity | ✅ | mainnet USDC transfer via the marketplace — [buy_invoice tx](https://stellar.expert/explorer/public/tx/d10a037aff2c95aeb43055dc6ecf6470395e3e12d361cf05b9344d6f79c2b3e1) (0.9 USDC transferred), [create_invoice](https://stellar.expert/explorer/public/tx/9e314ad31e9dfa8d3d5ebe4f797880345a96e3da8b1041965e581612d6245000), [approve](https://stellar.expert/explorer/public/tx/df5b8f4d509c294212c3330c341468c44f4c7161ac6d4298e57dc6c96edab55f) |
 | R8 | Smart contract audit / security review | ✅ | [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) — 10 findings, 7 fixed / 3 acknowledged, 0 open |
