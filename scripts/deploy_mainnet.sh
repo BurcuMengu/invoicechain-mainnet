@@ -42,7 +42,9 @@ ADMIN_ADDR=${ADMIN_ADDR:-$DEPLOYER_ADDR}
 # ── Derive / validate the real USDC SAC address (audit IC-01) ─────────────────
 if [[ -z "${USDC_SAC:-}" ]]; then
   echo "==> Deriving USDC SAC id from $USDC_ASSET on $NET..."
-  USDC_SAC=$(stellar contract id asset --asset "$USDC_ASSET" --network "$NET" --source "$SRC")
+  # `contract id asset` derives a deterministic address; it takes no --source.
+  # --network provides the rpc-url + passphrase from the configured network.
+  USDC_SAC=$(stellar contract id asset --asset "$USDC_ASSET" --network "$NET")
 fi
 echo "    USDC SAC (token): $USDC_SAC"
 case "$USDC_SAC" in
