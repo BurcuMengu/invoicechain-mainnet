@@ -20,8 +20,8 @@ debtor pays, the investor collects the full face value — with **gasless onboar
 |---|---|---|---|
 | R1 | Public GitHub repo | ✅ | [repo](https://github.com/BurcuMengu/invoicechain-mainnet) |
 | R2 | 30+ meaningful commits | ✅ | **87 commits** (`git rev-list --count HEAD`) |
-| R3 | Contracts deployed on mainnet | ⏳ deploy-ready | `scripts/deploy_mainnet.sh`, `DEPLOY.md §1` |
-| R4 | Mainnet contract addresses | ⏳ | `deployments/mainnet.json` after deploy |
+| R3 | Contracts deployed on mainnet | ✅ | live on Stellar mainnet — [marketplace tx](https://stellar.expert/explorer/public/tx/c20b4f1b2aafd4ebbd431e5ad85669e0e6c6a4bdb6dc20a6ee3e98ff97a56cff) |
+| R4 | Mainnet contract addresses | ✅ | [`deployments/mainnet.json`](deployments/mainnet.json) — marketplace [`CD76…RI53F`](https://stellar.expert/explorer/public/contract/CD76S7XCNIC3Q64JKKX66YS4PQA4QLRKATRAGK6HZBC5KGKDSMFRI53F), reputation [`CBP6…NXX4F`](https://stellar.expert/explorer/public/contract/CBP63ILG2LEVJLQYADHZFNV3YDT4FRVG3O4E76ENNKMLI4XE54BNXX4F), token = canonical USDC SAC |
 | R5 | Live mainnet app | ⏳ deploy-ready | env-driven `frontend/src/lib/config.ts`, `DEPLOY.md §2` |
 | R6 | 20+ verified mainnet users | ⏳ | onboarding form ready (R15); after mainnet |
 | R7 | Real on-chain tx activity | ⏳ | after mainnet (explorer links) |
