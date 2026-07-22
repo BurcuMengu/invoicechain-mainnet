@@ -24,7 +24,7 @@ debtor pays, the investor collects the full face value — with **gasless onboar
 | R3 | Contracts deployed on mainnet | ✅ | live on Stellar mainnet — [marketplace tx](https://stellar.expert/explorer/public/tx/c20b4f1b2aafd4ebbd431e5ad85669e0e6c6a4bdb6dc20a6ee3e98ff97a56cff) |
 | R4 | Mainnet contract addresses | ✅ | [`deployments/mainnet.json`](deployments/mainnet.json) — marketplace [`CD76…RI53F`](https://stellar.expert/explorer/public/contract/CD76S7XCNIC3Q64JKKX66YS4PQA4QLRKATRAGK6HZBC5KGKDSMFRI53F), reputation [`CBP6…NXX4F`](https://stellar.expert/explorer/public/contract/CBP63ILG2LEVJLQYADHZFNV3YDT4FRVG3O4E76ENNKMLI4XE54BNXX4F), token = canonical USDC SAC |
 | R5 | Live mainnet app | ✅ | **[burcumengu.github.io/invoicechain-mainnet](https://burcumengu.github.io/invoicechain-mainnet/)** — live, built against the mainnet contract ids |
-| R6 | 20+ verified mainnet users | ⏳ | onboarding form ready (R15); after mainnet |
+| R6 | 20+ verified mainnet users | ⏳ | onboarding form ready (R15), growth ongoing |
 | R7 | Real on-chain tx activity | ✅ | mainnet USDC transfer via the marketplace — [buy_invoice tx](https://stellar.expert/explorer/public/tx/d10a037aff2c95aeb43055dc6ecf6470395e3e12d361cf05b9344d6f79c2b3e1) (0.9 USDC transferred), [create_invoice](https://stellar.expert/explorer/public/tx/9e314ad31e9dfa8d3d5ebe4f797880345a96e3da8b1041965e581612d6245000), [approve](https://stellar.expert/explorer/public/tx/df5b8f4d509c294212c3330c341468c44f4c7161ac6d4298e57dc6c96edab55f) |
 | R8 | Smart contract audit / security review | ✅ | [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) — 10 findings, 7 fixed / 3 acknowledged, 0 open |
 | R9 | Twitter/X launch post | ✅ published | [Launch post](https://x.com/i/status/2078129791467753970) · source [`docs/marketing/twitter-launch-thread.md`](docs/marketing/twitter-launch-thread.md) |
@@ -65,7 +65,7 @@ largely-recoverable USDC float (the gasless feature covers user fees).
 
 1. **R3/R4:** `DEPLOY.md §1` — multisig admin + `deploy_mainnet.sh` → `mainnet.json`.
 2. **R5:** `DEPLOY.md §2` — point the frontend env at the mainnet ids + deploy.
-3. **R6/R7:** with the live app + onboarding form, gather 20+ real users + tx evidence.
+3. **R6/R7:** live app + onboarding form in place; growing toward 20+ users (tx evidence already captured).
 
 ## Publishing steps (R9–R11, free)
 - **R9:** ✅ posted — https://x.com/i/status/2078129791467753970
