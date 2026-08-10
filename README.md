@@ -233,6 +233,8 @@ feedback**:
   (name, email, Stellar wallet address, a 1–5 rating, and open feedback)
 - 📊 **Responses → Excel:** form responses sync to a linked Google Sheet and are
   exported to `docs/user-responses.xlsx`.
+- 🔓 **Public feedback sheet (anonymized):** [`docs/feedback-responses.csv`](docs/feedback-responses.csv)
+  — names/wallets masked, emails removed, so it's safe to share openly.
 
 **Responses so far — 3 sign-ups, ★5.0 average** (names & emails anonymized;
 wallet, rating and feedback are real):

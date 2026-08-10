@@ -34,7 +34,7 @@ debtor pays, the investor collects the full face value — with **gasless onboar
 | R13 | Full technical documentation | ✅ | `README.md`, specs, `DEPLOY.md`, `sponsor-worker/README.md` |
 | R14 | User guide / documentation | ✅ | [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md) |
 | R15 | Onboarding: Google Form (wallet/email/name/rating) | ✅ | README "User onboarding" section |
-| R16 | Responses → Excel + README link | ✅ | `docs/user-responses.xlsx` (testnet) → to be updated for mainnet |
+| R16 | Responses → Excel + README link | ✅ | `docs/user-responses.xlsx` + anonymized public sheet [`docs/feedback-responses.csv`](docs/feedback-responses.csv) (names/wallets masked, emails removed) |
 | R17 | README feedback-driven improvements + commit links | ✅ | README "How feedback drives the next iteration" |
 
 ## Highlights

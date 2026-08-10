@@ -1,0 +1,4 @@
+#,Name (anonymized),Wallet (masked),Network,Rating (1-5),Feedback
+1,E** B*******,GC****,testnet,5,Excellent UI but UX writings could be more self-explanatory which would be more practical for newbies
+2,B**** M****,GD****,testnet,5,"As a buyer, seeing the issuer's reputation score before buying gave me confidence. Showing their settle/default history too would seal it."
+3,H****** T*****,GB****,testnet,5,"InvoiceChain successfully implements the invoice factoring lifecycle on Soroban. To scale further, onboarding can be improved by enabling alternative wallets like Albedo or xBull. Additionally, adding marketplace filters (by yield, due date, and reputation), visualizing detailed on-chain reputation histories for better risk assessment, and replacing the mock fiat ramp with a real Stellar SEP-24 Anchor integration would significantly enhance the platform's value."

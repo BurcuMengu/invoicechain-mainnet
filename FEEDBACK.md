@@ -11,6 +11,9 @@ every page). Users leave a 1–5 star rating and a short message. Submissions ar
 
 No wallet connection is required to leave feedback, so any visitor can respond.
 
+**Public feedback sheet (anonymized):** [`docs/feedback-responses.csv`](docs/feedback-responses.csv)
+— sign-up form responses with names/wallets masked and emails removed.
+
 ## Responses so far
 
 **4 responses · average rating ★5.0**
