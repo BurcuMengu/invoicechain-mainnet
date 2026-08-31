@@ -259,6 +259,17 @@ Real user feedback is turned into shipped changes, each linked to its commit:
 filters, an in-app activity feed, and a settle notification. See
 [FEEDBACK.md](FEEDBACK.md) for the full log.
 
+## 📈 Growth & traction
+
+InvoiceChain is live on mainnet and iterating on real user feedback (Level 7 —
+Founder Belt). See the full checklist in [`SUBMISSION-L7.md`](SUBMISSION-L7.md).
+
+- **Monthly growth reports:** [`docs/growth/`](docs/growth/) — on-chain traction,
+  product updates, feedback highlights, and goals, refreshed each month.
+- **Public feedback sheet (anonymized):** [`docs/feedback-responses.csv`](docs/feedback-responses.csv)
+  — sign-up responses with names/wallets masked and emails removed.
+- **On-chain metrics:** regenerate anytime with `./scripts/growth_metrics.sh`.
+
 ## Repo layout
 
 ```
