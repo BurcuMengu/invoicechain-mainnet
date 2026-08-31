@@ -28,11 +28,11 @@ onboarding**.
 | 7 | Product improvement commit links | ✅ | [`FEEDBACK.md`](FEEDBACK.md) — feedback → shipped table |
 | 8 | Monthly growth report | ✅ | [`docs/growth/2026-08.md`](docs/growth/2026-08.md) |
 | 9 | Social media growth (50+ followers) | ⏳ | [X profile](https://x.com/i/status/2078129791467753970) — growth ongoing |
-| 10 | Product update posts | ⚠️ | [launch thread](https://x.com/i/status/2078129791467753970) + [Medium](https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6c); ongoing posts TBD |
+| 10 | Product update posts | ✅ | [launch thread](https://x.com/i/status/2078129791467753970) + [product update: mainnet + marketplace sorting](https://x.com/BurcuMengu_/status/2094445926685225390) + [Medium](https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6c) |
 | 11 | Community contribution proof | ⚠️ | [Medium article](https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6c) |
 | 12 | Updated documentation | ✅ | README, `docs/`, specs, [`DEPLOY.md`](DEPLOY.md) |
 
-**Status: 8 ✅ · 2 ⚠️ partial · 2 ⏳ pending (growth in progress).**
+**Status: 9 ✅ · 1 ⚠️ partial · 2 ⏳ pending (growth in progress).**
 
 ## Mainnet deployment
 
