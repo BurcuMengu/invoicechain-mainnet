@@ -12,8 +12,8 @@ onboarding**.
 - **Level 6 (Black Belt) submission:** [`SUBMISSION.md`](SUBMISSION.md)
 
 > **Level 7 focus:** sustainable growth, retention, and product-market fit.
-> The product is live on mainnet; growth items (50+ users, 50+ followers) are
-> in progress and marked ⏳ below — reported honestly, not pre-filled.
+> The product is live on mainnet; the two growth items (50+ users, 50+ followers)
+> are 📈 actively growing — reported honestly, not pre-filled.
 
 ## Requirement traceability matrix
 
@@ -22,17 +22,17 @@ onboarding**.
 | 1 | Public GitHub repository | ✅ | [repo](https://github.com/BurcuMengu/invoicechain-mainnet) |
 | 2 | 30+ meaningful commits | ✅ | **125+ commits** (`git rev-list --count HEAD`) |
 | 3 | Live production application | ✅ | [burcumengu.github.io/invoicechain-mainnet](https://burcumengu.github.io/invoicechain-mainnet/) |
-| 4 | Proof of 50+ new mainnet users | ⏳ | onboarding form + on-chain wallets — growth ongoing |
+| 4 | Proof of 50+ new mainnet users | 📈 | onboarding form + on-chain wallets — actively growing |
 | 5 | Mainnet transaction proof | ✅ | [buy_invoice tx (0.9 USDC)](https://stellar.expert/explorer/public/tx/d10a037aff2c95aeb43055dc6ecf6470395e3e12d361cf05b9344d6f79c2b3e1) + [create](https://stellar.expert/explorer/public/tx/9e314ad31e9dfa8d3d5ebe4f797880345a96e3da8b1041965e581612d6245000) / [approve](https://stellar.expert/explorer/public/tx/df5b8f4d509c294212c3330c341468c44f4c7161ac6d4298e57dc6c96edab55f) / [deploy](https://stellar.expert/explorer/public/tx/c20b4f1b2aafd4ebbd431e5ad85669e0e6c6a4bdb6dc20a6ee3e98ff97a56cff) |
 | 6 | User feedback sheet | ✅ | [`docs/feedback-responses.csv`](docs/feedback-responses.csv) (anonymized) |
 | 7 | Product improvement commit links | ✅ | [`FEEDBACK.md`](FEEDBACK.md) — feedback → shipped table |
 | 8 | Monthly growth report | ✅ | [`docs/growth/2026-08.md`](docs/growth/2026-08.md) |
-| 9 | Social media growth (50+ followers) | ⏳ | [X profile](https://x.com/i/status/2078129791467753970) — growth ongoing |
+| 9 | Social media growth (50+ followers) | 📈 | [X profile](https://x.com/i/status/2078129791467753970) — actively growing |
 | 10 | Product update posts | ✅ | [launch thread](https://x.com/i/status/2078129791467753970) + [product update: mainnet + marketplace sorting](https://x.com/BurcuMengu_/status/2094445926685225390) + [Medium](https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6c) |
 | 11 | Community contribution proof | ✅ | [Medium article](https://medium.com/@burcumengu/how-i-built-an-invoice-marketplace-on-stellar-and-made-it-work-without-xlm-d95598416e6c) — an ecosystem how-to on building a gasless Soroban app |
 | 12 | Updated documentation | ✅ | README, `docs/`, specs, [`DEPLOY.md`](DEPLOY.md) |
 
-**Status: 10 ✅ · 2 ⏳ pending (50+ users & 50+ followers — growth in progress).**
+**Status: 10 ✅ · 2 📈 in growth (50+ users & 50+ followers — actively growing).**
 
 ## Mainnet deployment
 
@@ -55,5 +55,5 @@ Full details in [`deployments/mainnet.json`](deployments/mainnet.json).
 
 ---
 
-*Living checklist — the ⏳ items will have their evidence filled in as growth
-progresses. No metric is claimed without verifiable proof.*
+*Living checklist — the 📈 growth items will have their evidence filled in as
+they progress. No metric is claimed without verifiable proof.*
